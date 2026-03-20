@@ -1,6 +1,6 @@
-# musicbrainz-el
+# musicbrainz.el
 
-Emacs Lisp MusicBrainz API 客户端，Org-mode 前端。纯查询，无需认证。
+Emacs Lisp MusicBrainz API查询库，及其Org-mode 前端。
 
 ## 特性
 
@@ -164,12 +164,9 @@ Org 中用 `C-c C-x C-v` 切换图片内联显示。
 
 ## 参考
 
-- [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API)
-- [MusicBrainz API Rate Limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)
+- [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API) and [MusicBrainz API Rate Limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)
 - [Cover Art Archive](https://coverartarchive.org)
-- [pdd.el](https://github.com/lorniu/pdd.el)
-- [emacs-async](https://github.com/jwiegley/emacs-async)
 
-## License
+## Licens
 
 MIT
