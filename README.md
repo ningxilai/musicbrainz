@@ -169,4 +169,4 @@ Org 中用 `C-c C-x C-v` 切换图片内联显示。
 
 ## License
 
-[MIT](./License)
+[MIT](./LICENSE)
