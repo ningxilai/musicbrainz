@@ -167,6 +167,6 @@ Org 中用 `C-c C-x C-v` 切换图片内联显示。
 - [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API) and [MusicBrainz API Rate Limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)
 - [Cover Art Archive](https://coverartarchive.org)
 
-## Licens
+## License
 
-MIT
+[MIT](./License)
