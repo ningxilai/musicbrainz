@@ -1,6 +1,6 @@
-# musicbrainz.el
+# musicbrainz-el
 
-Emacs Lisp MusicBrainz API查询库，及其Org-mode 前端。
+Emacs Lisp MusicBrainz API 客户端，Org-mode 前端。纯查询，无需认证。
 
 ## 特性
 
@@ -61,21 +61,21 @@ M-x musicbrainz-org-insert-artist
 
 ## 实体速查
 
-| 实体 | 搜索 | 查找 | Browse | Org 插入 |
-|------|------|------|--------|----------|
-| Artist | `search-artist` | `lookup-artist` | `browse-area-artists` | `insert-artist` |
-| Release | `search-release` | `lookup-release` | `browse-artist-releases` | `insert-release` |
+| 实体          | 搜索                   | 查找                   | Browse                         | Org 插入               |
+|---------------|------------------------|------------------------|--------------------------------|------------------------|
+| Artist        | `search-artist`        | `lookup-artist`        | `browse-area-artists`          | `insert-artist`        |
+| Release       | `search-release`       | `lookup-release`       | `browse-artist-releases`       | `insert-release`       |
 | Release Group | `search-release-group` | `lookup-release-group` | `browse-artist-release-groups` | `insert-release-group` |
-| Recording | `search-recording` | `lookup-recording` | `browse-artist-recordings` | `insert-recording` |
-| Label | `search-label` | `lookup-label` | `browse-area-labels` | `insert-label` |
-| Work | `search-work` | `lookup-work` | `browse-artist-works` | `insert-work` |
-| Area | `search-area` | `lookup-area` | — | `insert-area` |
-| Event | `search-event` | `lookup-event` | `browse-artist-events` | `insert-event` |
-| Instrument | `search-instrument` | `lookup-instrument` | — | `insert-instrument` |
-| Place | `search-place` | `lookup-place` | — | `insert-place` |
-| Series | `search-series` | `lookup-series` | — | `insert-series` |
-| URL | `search-url` | `lookup-url` | `lookup-url-by-resource` | `insert-url` |
-| Genre | `browse-genres` | `lookup-genre` | — | `insert-genre` |
+| Recording     | `search-recording`     | `lookup-recording`     | `browse-artist-recordings`     | `insert-recording`     |
+| Label         | `search-label`         | `lookup-label`         | `browse-area-labels`           | `insert-label`         |
+| Work          | `search-work`          | `lookup-work`          | `browse-artist-works`          | `insert-work`          |
+| Area          | `search-area`          | `lookup-area`          | —                              | `insert-area`          |
+| Event         | `search-event`         | `lookup-event`         | `browse-artist-events`         | `insert-event`         |
+| Instrument    | `search-instrument`    | `lookup-instrument`    | —                              | `insert-instrument`    |
+| Place         | `search-place`         | `lookup-place`         | —                              | `insert-place`         |
+| Series        | `search-series`        | `lookup-series`        | —                              | `insert-series`        |
+| URL           | `search-url`           | `lookup-url`           | `lookup-url-by-resource`       | `insert-url`           |
+| Genre         | `browse-genres`        | `lookup-genre`         | —                              | `insert-genre`         |
 
 ## Genre
 
@@ -164,9 +164,12 @@ Org 中用 `C-c C-x C-v` 切换图片内联显示。
 
 ## 参考
 
-- [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API) and [MusicBrainz API Rate Limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)
+- [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API)
+- [MusicBrainz API Rate Limiting](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting)
 - [Cover Art Archive](https://coverartarchive.org)
+- [pdd.el](https://github.com/lorniu/pdd.el)
+- [emacs-async](https://github.com/jwiegley/emacs-async)
 
 ## License
 
-[MIT](./LICENSE)
+MIT
