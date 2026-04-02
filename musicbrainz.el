@@ -2,8 +2,10 @@
 
 ;; Copyright (C) 2025
 ;; Author: https://github.com/larsmagne/musicbrainz.el, Mimo V2 Flash Free/MiniMax M2.5 Free
-;; Keywords: music, api
-;; Package-Requires: ((emacs "27.1") (pdd "0.2.3"))
+;; Keywords: music api musicbrainz
+;; Version: 0.2.0
+;; URL: https://github.com/musicbrainz/musicbrainz-el
+;; Package-Requires: ((emacs "27.1") (pdd "0.2.3") (async "1.9"))
 
 ;;; Commentary:
 
@@ -126,10 +128,11 @@ This implements a sliding window rate limiter similar to rate-limit-threshold."
 (defun musicbrainz--cache-put (key value)
   "Put VALUE in cache with KEY."
   (when (>= (length musicbrainz--cache-keys) musicbrainz-cache-size)
-    (let ((oldest (pop musicbrainz--cache-keys)))
+    (let ((oldest (car musicbrainz--cache-keys)))
+      (setq musicbrainz--cache-keys (cdr musicbrainz--cache-keys))
       (remhash oldest musicbrainz--cache)))
   (puthash key value musicbrainz--cache)
-  (push key musicbrainz--cache-keys))
+  (setq musicbrainz--cache-keys (append musicbrainz--cache-keys (list key))))
 
 (defun musicbrainz--make-cache-key (url parameters)
   "Create cache key from URL and PARAMETERS."
@@ -405,6 +408,155 @@ If CALLBACK provided, performs async request. Returns parsed JSON response."
    (disambiguation :initarg :disambiguation :type (or null string) :documentation "Disambiguation"))
   "MusicBrainz genre resource.")
 
+;;; Additional entities for full API coverage
+
+(defclass musicbrainz-relation ()
+  ((type :initarg :type :type string :documentation "Relation type")
+   (target-type :initarg :target-type :type string :documentation "Target entity type")
+   (target-id :initarg :target-id :type (or null string) :documentation "Target MBID")
+   (direction :initarg :direction :type (or null string) :documentation "Direction (forward/backward)")
+   (begin-date :initarg :begin-date :type (or null string) :documentation "Begin date")
+   (end-date :initarg :end-date :type (or null string) :documentation "End date")
+   (ended :initarg :ended :type (or null boolean) :documentation "Whether relation ended")
+   (target :initarg :target :type (or null list) :documentation "Target entity data"))
+  "MusicBrainz relation resource.")
+
+(defclass musicbrainz-annotation ()
+  ((id :initarg :id :type string :documentation "Annotation ID")
+   (entity :initarg :entity :type string :documentation "Entity MBID")
+   (name :initarg :name :type (or null string) :documentation "Entity name")
+   (text :initarg :text :type (or null string) :documentation "Annotation text")
+   (type :initarg :type :type (or null string) :documentation "Entity type"))
+  "MusicBrainz annotation resource.")
+
+(defclass musicbrainz-collection ()
+  ((id :initarg :id :type string :documentation "Collection ID")
+   (name :initarg :name :type string :documentation "Collection name")
+   (editor :initarg :editor :type (or null string) :documentation "Editor username")
+   (entity-type :initarg :entity-type :type (or null string) :documentation "Entity type")
+   (entity-count :initarg :entity-count :type (or null number) :documentation "Entity count"))
+  "MusicBrainz collection resource.")
+
+(defclass musicbrainz-cdstub ()
+  ((id :initarg :id :type string :documentation "CDStub ID")
+   (title :initarg :title :type (or null string) :documentation "CD title")
+   (artist :initarg :artist :type (or null string) :documentation "Artist name")
+   (barcode :initarg :barcode :type (or null string) :documentation "Barcode")
+   (comment :initarg :comment :type (or null string) :documentation "Comment")
+   (track-count :initarg :track-count :type (or null number) :documentation "Track count"))
+  "MusicBrainz CD stub resource.")
+
+(defclass musicbrainz-disc ()
+  ((id :initarg :id :type string :documentation "Disc ID")
+   (offsets :initarg :offsets :type (or null vector list) :documentation "Track offsets")
+   (sectors :initarg :sectors :type (or null number) :documentation "Number of sectors")
+   (release-list :initarg :release-list :type (or null vector list) :documentation "Release list"))
+  "MusicBrainz disc resource.")
+
+(defclass musicbrainz-freedb-disc ()
+  ((id :initarg :id :type string :documentation "FreeDB Disc ID")
+   (title :initarg :title :type (or null string) :documentation "Disc title")
+   (artist :initarg :artist :type (or null string) :documentation "Artist name")
+   (category :initarg :category :type (or null string) :documentation "Category")
+   (year :initarg :year :type (or null number) :documentation "Year"))
+  "MusicBrainz FreeDB disc resource.")
+
+(defclass musicbrainz-isrc ()
+  ((id :initarg :id :type string :documentation "ISRC code")
+   (recording-list :initarg :recording-list :type (or null vector list) :documentation "Recording list"))
+  "MusicBrainz ISRC resource.")
+
+(defclass musicbrainz-iswc ()
+  ((id :initarg :id :type string :documentation "ISWC code")
+   (work-list :initarg :work-list :type (or null vector list) :documentation "Work list"))
+  "MusicBrainz ISWC resource.")
+
+(defclass musicbrainz-puid ()
+  ((id :initarg :id :type string :documentation "PUID code")
+   (recording-list :initarg :recording-list :type (or null vector list) :documentation "Recording list"))
+  "MusicBrainz PUID resource.")
+
+(defclass musicbrainz-tag ()
+  ((name :initarg :name :type string :documentation "Tag name")
+   (count :initarg :count :type (or null number) :documentation "Vote count"))
+  "MusicBrainz tag resource.")
+
+(defclass musicbrainz-user-tag ()
+  ((name :initarg :name :type string :documentation "Tag name"))
+  "MusicBrainz user tag resource.")
+
+(defclass musicbrainz-rating ()
+  ((value :initarg :value :type number :documentation "Rating value")
+   (votes-count :initarg :votes-count :type (or null number) :documentation "Number of votes"))
+  "MusicBrainz rating resource.")
+
+(defclass musicbrainz-user-rating ()
+  ((value :initarg :value :type number :documentation "User rating value"))
+  "MusicBrainz user rating resource.")
+
+(defclass musicbrainz-medium ()
+  ((position :initarg :position :type (or null number) :documentation "Medium position")
+   (format :initarg :format :type (or null string) :documentation "Medium format")
+   (title :initarg :title :type (or null string) :documentation "Medium title")
+   (track-list :initarg :track-list :type (or null vector list) :documentation "Track list")
+   (disc-list :initarg :disc-list :type (or null vector list) :documentation "Disc list"))
+  "MusicBrainz medium resource.")
+
+(defclass musicbrainz-track ()
+  ((id :initarg :id :type (or null string) :documentation "Track ID")
+   (position :initarg :position :type (or null number) :documentation "Track position")
+   (number :initarg :number :type (or null string) :documentation "Track number")
+   (title :initarg :title :type string :documentation "Track title")
+   (length :initarg :length :type (or null number) :documentation "Track length in ms")
+   (recording :initarg :recording :type (or null list) :documentation "Recording data"))
+  "MusicBrainz track resource.")
+
+(defclass musicbrainz-alias ()
+  ((locale :initarg :locale :type (or null string) :documentation "Locale")
+   (alias :initarg :alias :type string :documentation "Alias text")
+   (type :initarg :type :type (or null string) :documentation "Alias type")
+   (primary :initarg :primary :type (or null boolean) :documentation "Whether primary"))
+  "MusicBrainz alias resource.")
+
+(defclass musicbrainz-attribute ()
+  ((attribute :initarg :attribute :type string :documentation "Attribute value")
+   (credited-as :initarg :credited-as :type (or null string) :documentation "Credited as"))
+  "MusicBrainz attribute resource.")
+
+(defclass musicbrainz-ipi ()
+  ((ipi :initarg :ipi :type string :documentation "IPI code"))
+  "MusicBrainz IPI resource.")
+
+(defclass musicbrainz-isni ()
+  ((isni :initarg :isni :type string :documentation "ISNI code"))
+  "MusicBrainz ISNI resource.")
+
+(defclass musicbrainz-life-span ()
+  ((begin :initarg :begin :type (or null string) :documentation "Begin date")
+   (end :initarg :end :type (or null string) :documentation "End date")
+   (ended :initarg :ended :type (or null boolean) :documentation "Whether ended"))
+  "MusicBrainz life span resource.")
+
+(defclass musicbrainz-text-representation ()
+  ((language :initarg :language :type (or null string) :documentation "Language code")
+   (script :initarg :script :type (or null string) :documentation "Script code"))
+  "MusicBrainz text representation resource.")
+
+(defclass musicbrainz-artist-credit ()
+  ((name-credit-list :initarg :name-credit-list :type (or null vector list) :documentation "Name credit list")
+   (name :initarg :name :type (or null string) :documentation "Artist credit name"))
+  "MusicBrainz artist credit resource.")
+
+(defclass musicbrainz-name-credit ()
+  ((name :initarg :name :type (or null string) :documentation "Credit name")
+   (join-phrase :initarg :join-phrase :type (or null string) :documentation "Join phrase")
+   (artist :initarg :artist :type (or null list) :documentation "Artist data"))
+  "MusicBrainz name credit resource.")
+
+(defclass musicbrainz-secondary-type ()
+  ((secondary-type :initarg :secondary-type :type string :documentation "Secondary type"))
+  "MusicBrainz secondary type resource.")
+
 ;;; Resource parsing
 
 (defun musicbrainz--nullify (obj)
@@ -444,11 +596,22 @@ If CALLBACK provided, performs async request. Returns parsed JSON response."
 (defun musicbrainz--parse-release (release-json)
   "Parse RELEASE-JSON into musicbrainz-release object."
   (let* ((artist-credit-list (alist-get 'artist-credit release-json))
-         (artist-name (if (consp artist-credit-list)
-                          (alist-get 'name (car (alist-get 'artist (car artist-credit-list))))
-                        "Unknown"))
+         (artist-name (cond
+                       ((consp artist-credit-list)
+                        (let* ((first-credit (car artist-credit-list))
+                               (artist (alist-get 'artist first-credit)))
+                          (or (alist-get 'name artist) "Unknown")))
+                       ((vectorp artist-credit-list)
+                        (when (> (length artist-credit-list) 0)
+                          (let* ((first-credit (aref artist-credit-list 0))
+                                 (artist (alist-get 'artist first-credit)))
+                            (or (alist-get 'name artist) "Unknown"))))
+                       (t "Unknown")))
          (formats (alist-get 'formats release-json))
-         (format-info (when formats (car formats)))
+         (format-info (cond
+                       ((vectorp formats) (when (> (length formats) 0) (aref formats 0)))
+                       ((consp formats) (car formats))
+                       (t nil)))
          (release-group (alist-get 'release-group release-json))
          ;; Parse tracklist - handle both vector and list for media
          (media (alist-get 'media release-json))
@@ -590,6 +753,163 @@ If CALLBACK provided, performs async request. Returns parsed JSON response."
    :id (alist-get 'id genre-json)
    :name (alist-get 'name genre-json)
    :disambiguation (alist-get 'disambiguation genre-json)))
+
+(defun musicbrainz--parse-relation (relation-json)
+  "Parse RELATION-JSON into musicbrainz-relation object."
+  (make-instance 'musicbrainz-relation
+   :type (alist-get 'type relation-json)
+   :target-type (alist-get 'target-type relation-json)
+   :target-id (alist-get 'target-id relation-json)
+   :direction (alist-get 'direction relation-json)
+   :begin-date (alist-get 'begin-date relation-json)
+   :end-date (alist-get 'end-date relation-json)
+   :ended (alist-get 'ended relation-json)
+   :target (alist-get 'target relation-json)))
+
+(defun musicbrainz--parse-annotation (annotation-json)
+  "Parse ANNOTATION-JSON into musicbrainz-annotation object."
+  (make-instance 'musicbrainz-annotation
+   :id (alist-get 'id annotation-json)
+   :entity (alist-get 'entity annotation-json)
+   :name (alist-get 'name annotation-json)
+   :text (alist-get 'text annotation-json)
+   :type (alist-get 'type annotation-json)))
+
+(defun musicbrainz--parse-collection (collection-json)
+  "Parse COLLECTION-JSON into musicbrainz-collection object."
+  (make-instance 'musicbrainz-collection
+   :id (alist-get 'id collection-json)
+   :name (alist-get 'name collection-json)
+   :editor (alist-get 'editor collection-json)
+   :entity-type (alist-get 'entity-type collection-json)
+   :entity-count (alist-get 'entity-count collection-json)))
+
+(defun musicbrainz--parse-cdstub (cdstub-json)
+  "Parse CDSTUB-JSON into musicbrainz-cdstub object."
+  (make-instance 'musicbrainz-cdstub
+   :id (alist-get 'id cdstub-json)
+   :title (alist-get 'title cdstub-json)
+   :artist (alist-get 'artist cdstub-json)
+   :barcode (alist-get 'barcode cdstub-json)
+   :comment (alist-get 'comment cdstub-json)
+   :track-count (alist-get 'track-count cdstub-json)))
+
+(defun musicbrainz--parse-disc (disc-json)
+  "Parse DISC-JSON into musicbrainz-disc object."
+  (make-instance 'musicbrainz-disc
+   :id (alist-get 'id disc-json)
+   :offsets (alist-get 'offsets disc-json)
+   :sectors (alist-get 'sectors disc-json)
+   :release-list (alist-get 'releases disc-json)))
+
+(defun musicbrainz--parse-freedb-disc (freedb-json)
+  "Parse FREEDB-JSON into musicbrainz-freedb-disc object."
+  (make-instance 'musicbrainz-freedb-disc
+   :id (alist-get 'id freedb-json)
+   :title (alist-get 'title freedb-json)
+   :artist (alist-get 'artist freedb-json)
+   :category (alist-get 'category freedb-json)
+   :year (alist-get 'year freedb-json)))
+
+(defun musicbrainz--parse-isrc (isrc-json)
+  "Parse ISRC-JSON into musicbrainz-isrc object."
+  (make-instance 'musicbrainz-isrc
+   :id (alist-get 'isrc isrc-json)
+   :recording-list (alist-get 'recordings isrc-json)))
+
+(defun musicbrainz--parse-iswc (iswc-json)
+  "Parse ISWC-JSON into musicbrainz-iswc object."
+  (make-instance 'musicbrainz-iswc
+   :id (alist-get 'iswc iswc-json)
+   :work-list (alist-get 'works iswc-json)))
+
+(defun musicbrainz--parse-puid (puid-json)
+  "Parse PUID-JSON into musicbrainz-puid object."
+  (make-instance 'musicbrainz-puid
+   :id (alist-get 'id puid-json)
+   :recording-list (alist-get 'recordings puid-json)))
+
+(defun musicbrainz--parse-tag (tag-json)
+  "Parse TAG-JSON into musicbrainz-tag object."
+  (make-instance 'musicbrainz-tag
+   :name (alist-get 'name tag-json)
+   :count (alist-get 'count tag-json)))
+
+(defun musicbrainz--parse-user-tag (tag-json)
+  "Parse TAG-JSON into musicbrainz-user-tag object."
+  (make-instance 'musicbrainz-user-tag
+   :name (alist-get 'name tag-json)))
+
+(defun musicbrainz--parse-rating (rating-json)
+  "Parse RATING-JSON into musicbrainz-rating object."
+  (make-instance 'musicbrainz-rating
+   :value (alist-get 'value rating-json)
+   :votes-count (alist-get 'votes-count rating-json)))
+
+(defun musicbrainz--parse-user-rating (rating-json)
+  "Parse RATING-JSON into musicbrainz-user-rating object."
+  (make-instance 'musicbrainz-user-rating
+   :value (alist-get 'value rating-json)))
+
+(defun musicbrainz--parse-medium (medium-json)
+  "Parse MEDIUM-JSON into musicbrainz-medium object."
+  (make-instance 'musicbrainz-medium
+   :position (alist-get 'position medium-json)
+   :format (when-let* ((fmt (alist-get 'format medium-json)))
+             (if (stringp fmt) fmt (alist-get 'name fmt)))
+   :title (alist-get 'title medium-json)
+   :track-list (alist-get 'tracks medium-json)
+   :disc-list (alist-get 'discs medium-json)))
+
+(defun musicbrainz--parse-track (track-json)
+  "Parse TRACK-JSON into musicbrainz-track object."
+  (make-instance 'musicbrainz-track
+   :id (alist-get 'id track-json)
+   :position (alist-get 'position track-json)
+   :number (alist-get 'number track-json)
+   :title (alist-get 'title track-json)
+   :length (alist-get 'length track-json)
+   :recording (alist-get 'recording track-json)))
+
+(defun musicbrainz--parse-alias (alias-json)
+  "Parse ALIAS-JSON into musicbrainz-alias object."
+  (make-instance 'musicbrainz-alias
+   :locale (alist-get 'locale alias-json)
+   :alias (alist-get 'alias alias-json)
+   :type (alist-get 'type alias-json)
+   :primary (alist-get 'primary alias-json)))
+
+(defun musicbrainz--parse-life-span (life-span-json)
+  "Parse LIFE-SPAN-JSON into musicbrainz-life-span object."
+  (make-instance 'musicbrainz-life-span
+   :begin (alist-get 'begin life-span-json)
+   :end (alist-get 'end life-span-json)
+   :ended (alist-get 'ended life-span-json)))
+
+(defun musicbrainz--parse-text-representation (tr-json)
+  "Parse TEXT-REPRESENTATION-JSON into musicbrainz-text-representation object."
+  (make-instance 'musicbrainz-text-representation
+   :language (alist-get 'language tr-json)
+   :script (alist-get 'script tr-json)))
+
+(defun musicbrainz--parse-artist-credit (ac-json)
+  "Parse ARTIST-CREDIT-JSON into musicbrainz-artist-credit object."
+  (make-instance 'musicbrainz-artist-credit
+   :name-credit-list ac-json
+   :name (when (consp ac-json)
+           (alist-get 'name (car (alist-get 'artist (car ac-json)))))))
+
+(defun musicbrainz--parse-name-credit (nc-json)
+  "Parse NAME-CREDIT-JSON into musicbrainz-name-credit object."
+  (make-instance 'musicbrainz-name-credit
+   :name (alist-get 'name nc-json)
+   :join-phrase (alist-get 'joinphrase nc-json)
+   :artist (alist-get 'artist nc-json)))
+
+(defun musicbrainz--parse-secondary-type (st-json)
+  "Parse SECONDARY-TYPE-JSON into musicbrainz-secondary-type object."
+  (make-instance 'musicbrainz-secondary-type
+   :secondary-type (if (stringp st-json) st-json (alist-get 'secondary-type st-json))))
 
 ;;; Public API - Search functions
 
@@ -1216,6 +1536,92 @@ If FORCE-UPDATE is non-nil, fetch fresh data from MusicBrainz."
           (oref url resource)
           (oref url id)))
 
+;;; Additional format functions for new entities
+
+(defun musicbrainz-format-relation (relation index)
+  "Format RELATION for display with INDEX."
+  (format "[%d] %s -> %s%s"
+          index
+          (oref relation type)
+          (oref relation target-type)
+          (if (oref relation ended) " (ended)" "")))
+
+(defun musicbrainz-format-annotation (annotation index)
+  "Format ANNOTATION for display with INDEX."
+  (format "[%d] %s: %s"
+          index
+          (oref annotation type)
+          (if-let* ((text (oref annotation text)))
+              (substring text 0 (min 50 (length text)))
+            "No text")))
+
+(defun musicbrainz-format-collection (collection index)
+  "Format COLLECTION for display with INDEX."
+  (format "[%d] %s (%d items)"
+          index
+          (oref collection name)
+          (or (oref collection entity-count) 0)))
+
+(defun musicbrainz-format-cdstub (cdstub index)
+  "Format CDSTUB for display with INDEX."
+  (format "[%d] %s - %s"
+          index
+          (or (oref cdstub artist) "Unknown")
+          (or (oref cdstub title) "Unknown")))
+
+(defun musicbrainz-format-disc (disc index)
+  "Format DISC for display with INDEX."
+  (format "[%d] Disc ID: %s (%d releases)"
+          index
+          (oref disc id)
+          (length (or (oref disc release-list) '()))))
+
+(defun musicbrainz-format-isrc (isrc index)
+  "Format ISRC for display with INDEX."
+  (format "[%d] ISRC: %s (%d recordings)"
+          index
+          (oref isrc id)
+          (length (or (oref isrc recording-list) '()))))
+
+(defun musicbrainz-format-iswc (iswc index)
+  "Format ISWC for display with INDEX."
+  (format "[%d] ISWC: %s (%d works)"
+          index
+          (oref iswc id)
+          (length (or (oref iswc work-list) '()))))
+
+(defun musicbrainz-format-puid (puid index)
+  "Format PUID for display with INDEX."
+  (format "[%d] PUID: %s (%d recordings)"
+          index
+          (oref puid id)
+          (length (or (oref puid recording-list) '()))))
+
+(defun musicbrainz-format-tag (tag index)
+  "Format TAG for display with INDEX."
+  (format "[%d] %s%s"
+          index
+          (oref tag name)
+          (if-let* ((count (oref tag count)))
+              (format " (%d)" count) "")))
+
+(defun musicbrainz-format-medium (medium index)
+  "Format MEDIUM for display with INDEX."
+  (format "[%d] %s - %s"
+          index
+          (or (oref medium format) "Unknown format")
+          (or (oref medium title) (format "Position %d" (or (oref medium position) 0)))))
+
+(defun musicbrainz-format-track (track index)
+  "Format TRACK for display with INDEX."
+  (format "[%d] %s. %s%s"
+          index
+          (or (oref track number) "?")
+          (oref track title)
+          (if-let* ((length (oref track length)))
+              (format " (%d:%02d)" (/ length 60000) (/ (mod length 60000) 1000))
+            "")))
+
 ;;;###autoload
 (defun musicbrainz-lookup-release-group-genres (mbid &optional callback)
   "Look up genres for release group by MBID.
@@ -1226,6 +1632,312 @@ If CALLBACK provided, performs async request."
                              (funcall callback (append (alist-get 'genres json) nil))))
     (when-let* ((json (musicbrainz--lookup "release-group" mbid "genres")))
       (append (alist-get 'genres json) nil))))
+
+;;; Relationship support - Parse relations from entity responses
+
+(defun musicbrainz--extract-relations (entity-json)
+  "Extract and parse relations from ENTITY-JSON response."
+  (when-let* ((relations (alist-get 'relations entity-json)))
+    (mapcar #'musicbrainz--parse-relation
+            (if (vectorp relations) (append relations nil) relations))))
+
+(defun musicbrainz--extract-relation-lists (entity-json)
+  "Extract relation lists from ENTITY-JSON response."
+  (when-let* ((relation-lists (alist-get 'relation-lists entity-json)))
+    (mapcar (lambda (rl)
+              (let ((target-type (alist-get 'target-type rl))
+                    (relations (alist-get 'relations rl)))
+                (list :target-type target-type
+                      :relations (mapcar #'musicbrainz--parse-relation
+                                        (if (vectorp relations) (append relations nil) relations)))))
+            (if (vectorp relation-lists) (append relation-lists nil) relation-lists))))
+
+;;;###autoload
+(defun musicbrainz-lookup-artist-relations (mbid &optional callback)
+  "Look up artist by MBID with relations.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "artist" mbid "url-rels+recording-rels+release-rels+release-group-rels+work-rels+label-rels"
+        (lambda (json)
+          (let ((artist (musicbrainz--parse-artist json))
+                (relations (musicbrainz--extract-relations json))
+                (relation-lists (musicbrainz--extract-relation-lists json)))
+            (funcall callback (list :artist artist :relations relations :relation-lists relation-lists)))))
+    (when-let* ((json (musicbrainz--lookup "artist" mbid "url-rels+recording-rels+release-rels+release-group-rels+work-rels+label-rels")))
+      (let ((artist (musicbrainz--parse-artist json))
+            (relations (musicbrainz--extract-relations json))
+            (relation-lists (musicbrainz--extract-relation-lists json)))
+        (list :artist artist :relations relations :relation-lists relation-lists)))))
+
+;;;###autoload
+(defun musicbrainz-lookup-release-relations (mbid &optional callback)
+  "Look up release by MBID with relations.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "release" mbid "artists+labels+recordings+release-groups+url-rels+discids+artist-credits+media"
+        (lambda (json)
+          (let ((release (musicbrainz--parse-release json))
+                (relations (musicbrainz--extract-relations json))
+                (relation-lists (musicbrainz--extract-relation-lists json)))
+            (funcall callback (list :release release :relations relations :relation-lists relation-lists)))))
+    (when-let* ((json (musicbrainz--lookup "release" mbid "artists+labels+recordings+release-groups+url-rels+discids+artist-credits+media")))
+      (let ((release (musicbrainz--parse-release json))
+            (relations (musicbrainz--extract-relations json))
+            (relation-lists (musicbrainz--extract-relation-lists json)))
+        (list :release release :relations relations :relation-lists relation-lists)))))
+
+;;;###autoload
+(defun musicbrainz-lookup-recording-relations (mbid &optional callback)
+  "Look up recording by MBID with relations.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "recording" mbid "artists+releases+url-rels+work-rels+artist-rels+isrcs+tags+ratings"
+        (lambda (json)
+          (let ((recording (musicbrainz--parse-recording json))
+                (relations (musicbrainz--extract-relations json))
+                (relation-lists (musicbrainz--extract-relation-lists json)))
+            (funcall callback (list :recording recording :relations relations :relation-lists relation-lists)))))
+    (when-let* ((json (musicbrainz--lookup "recording" mbid "artists+releases+url-rels+work-rels+artist-rels+isrcs+tags+ratings")))
+      (let ((recording (musicbrainz--parse-recording json))
+            (relations (musicbrainz--extract-relations json))
+            (relation-lists (musicbrainz--extract-relation-lists json)))
+        (list :recording recording :relations relations :relation-lists relation-lists)))))
+
+;;;###autoload
+(defun musicbrainz-lookup-work-relations (mbid &optional callback)
+  "Look up work by MBID with relations.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "work" mbid "url-rels+artist-rels+recording-rels+iswcs+tags+ratings"
+        (lambda (json)
+          (let ((work (musicbrainz--parse-work json))
+                (relations (musicbrainz--extract-relations json))
+                (relation-lists (musicbrainz--extract-relation-lists json)))
+            (funcall callback (list :work work :relations relations :relation-lists relation-lists)))))
+    (when-let* ((json (musicbrainz--lookup "work" mbid "url-rels+artist-rels+recording-rels+iswcs+tags+ratings")))
+      (let ((work (musicbrainz--parse-work json))
+            (relations (musicbrainz--extract-relations json))
+            (relation-lists (musicbrainz--extract-relation-lists json)))
+        (list :work work :relations relations :relation-lists relation-lists)))))
+
+;;;###autoload
+(defun musicbrainz-lookup-label-relations (mbid &optional callback)
+  "Look up label by MBID with relations.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "label" mbid "url-rels+release-rels+tags+ratings"
+        (lambda (json)
+          (let ((label (musicbrainz--parse-label json))
+                (relations (musicbrainz--extract-relations json))
+                (relation-lists (musicbrainz--extract-relation-lists json)))
+            (funcall callback (list :label label :relations relations :relation-lists relation-lists)))))
+    (when-let* ((json (musicbrainz--lookup "label" mbid "url-rels+release-rels+tags+ratings")))
+      (let ((label (musicbrainz--parse-label json))
+            (relations (musicbrainz--extract-relations json))
+            (relation-lists (musicbrainz--extract-relation-lists json)))
+        (list :label label :relations relations :relation-lists relation-lists)))))
+
+;;; Disc ID lookup
+
+;;;###autoload
+(defun musicbrainz-lookup-disc-id (disc-id &optional callback)
+  "Look up releases by DISC-ID.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "discid" disc-id "artists+labels+recordings+release-groups+artist-credits+media"
+        (lambda (json)
+          (let ((disc (musicbrainz--parse-disc json)))
+            (funcall callback disc))))
+    (when-let* ((json (musicbrainz--lookup "discid" disc-id "artists+labels+recordings+release-groups+artist-credits+media")))
+      (musicbrainz--parse-disc json))))
+
+;;;###autoload
+(defun musicbrainz-lookup-disc-id-releases (disc-id &optional callback)
+  "Look up releases by DISC-ID, returning release list.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz-lookup-disc-id disc-id
+        (lambda (disc)
+          (when-let* ((releases (oref disc release-list)))
+            (funcall callback (mapcar #'musicbrainz--parse-release
+                                      (if (vectorp releases) (append releases nil) releases))))))
+    (when-let* ((disc (musicbrainz-lookup-disc-id disc-id))
+                (releases (oref disc release-list)))
+      (mapcar #'musicbrainz--parse-release
+              (if (vectorp releases) (append releases nil) releases)))))
+
+;;; ISRC lookup
+
+;;;###autoload
+(defun musicbrainz-lookup-isrc (isrc &optional callback)
+  "Look up recordings by ISRC code.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "isrc" isrc "artists+releases+url-rels"
+        (lambda (json)
+          (let ((isrc-obj (musicbrainz--parse-isrc json)))
+            (funcall callback isrc-obj))))
+    (when-let* ((json (musicbrainz--lookup "isrc" isrc "artists+releases+url-rels")))
+      (musicbrainz--parse-isrc json))))
+
+;;;###autoload
+(defun musicbrainz-lookup-isrc-recordings (isrc &optional callback)
+  "Look up recordings by ISRC code, returning recording list.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz-lookup-isrc isrc
+        (lambda (isrc-obj)
+          (when-let* ((recordings (oref isrc-obj recording-list)))
+            (funcall callback (mapcar #'musicbrainz--parse-recording
+                                      (if (vectorp recordings) (append recordings nil) recordings))))))
+    (when-let* ((isrc-obj (musicbrainz-lookup-isrc isrc))
+                (recordings (oref isrc-obj recording-list)))
+      (mapcar #'musicbrainz--parse-recording
+              (if (vectorp recordings) (append recordings nil) recordings)))))
+
+;;; ISWC lookup
+
+;;;###autoload
+(defun musicbrainz-lookup-iswc (iswc &optional callback)
+  "Look up works by ISWC code.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "iswc" iswc "artists+url-rels"
+        (lambda (json)
+          (let ((iswc-obj (musicbrainz--parse-iswc json)))
+            (funcall callback iswc-obj))))
+    (when-let* ((json (musicbrainz--lookup "iswc" iswc "artists+url-rels")))
+      (musicbrainz--parse-iswc json))))
+
+;;;###autoload
+(defun musicbrainz-lookup-iswc-works (iswc &optional callback)
+  "Look up works by ISWC code, returning work list.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz-lookup-iswc iswc
+        (lambda (iswc-obj)
+          (when-let* ((works (oref iswc-obj work-list)))
+            (funcall callback (mapcar #'musicbrainz--parse-work
+                                      (if (vectorp works) (append works nil) works))))))
+    (when-let* ((iswc-obj (musicbrainz-lookup-iswc iswc))
+                (works (oref iswc-obj work-list)))
+      (mapcar #'musicbrainz--parse-work
+              (if (vectorp works) (append works nil) works)))))
+
+;;; PUID lookup
+
+;;;###autoload
+(defun musicbrainz-lookup-puid (puid &optional callback)
+  "Look up recordings by PUID code.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "puid" puid "artists+releases"
+        (lambda (json)
+          (let ((puid-obj (musicbrainz--parse-puid json)))
+            (funcall callback puid-obj))))
+    (when-let* ((json (musicbrainz--lookup "puid" puid "artists+releases")))
+      (musicbrainz--parse-puid json))))
+
+;;; CDStub lookup
+
+;;;###autoload
+(defun musicbrainz-lookup-cdstub (cdstub-id &optional callback)
+  "Look up CDStub by CDSTUB-ID.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "cdstub" cdstub-id nil
+        (lambda (json)
+          (let ((cdstub (musicbrainz--parse-cdstub json)))
+            (funcall callback cdstub))))
+    (when-let* ((json (musicbrainz--lookup "cdstub" cdstub-id)))
+      (musicbrainz--parse-cdstub json))))
+
+;;; FreeDB lookup
+
+;;;###autoload
+(defun musicbrainz-lookup-freedb (freedb-id &optional callback)
+  "Look up FreeDB disc by FREEDB-ID.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "freedb" freedb-id nil
+        (lambda (json)
+          (let ((freedb (musicbrainz--parse-freedb-disc json)))
+            (funcall callback freedb))))
+    (when-let* ((json (musicbrainz--lookup "freedb" freedb-id)))
+      (musicbrainz--parse-freedb-disc json))))
+
+;;; Collection lookup (read-only)
+
+;;;###autoload
+(defun musicbrainz-lookup-collection (collection-id &optional callback)
+  "Look up collection by COLLECTION-ID.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--lookup "collection" collection-id nil
+        (lambda (json)
+          (let ((collection (musicbrainz--parse-collection json)))
+            (funcall callback collection))))
+    (when-let* ((json (musicbrainz--lookup "collection" collection-id)))
+      (musicbrainz--parse-collection json))))
+
+;;;###autoload
+(defun musicbrainz-lookup-collection-releases (collection-id &optional limit offset callback)
+  "Look up releases in collection by COLLECTION-ID.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--request (format "collection/%s/releases" collection-id) nil limit offset
+        (lambda (json)
+          (when-let* ((releases (alist-get 'releases json)))
+            (funcall callback (mapcar #'musicbrainz--parse-release releases)))))
+    (when-let* ((json (musicbrainz--request (format "collection/%s/releases" collection-id) nil limit offset))
+                (releases (alist-get 'releases json)))
+      (mapcar #'musicbrainz--parse-release releases))))
+
+;;;###autoload
+(defun musicbrainz-lookup-collection-artists (collection-id &optional limit offset callback)
+  "Look up artists in collection by COLLECTION-ID.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--request (format "collection/%s/artists" collection-id) nil limit offset
+        (lambda (json)
+          (when-let* ((artists (alist-get 'artists json)))
+            (funcall callback (mapcar #'musicbrainz--parse-artist artists)))))
+    (when-let* ((json (musicbrainz--request (format "collection/%s/artists" collection-id) nil limit offset))
+                (artists (alist-get 'artists json)))
+      (mapcar #'musicbrainz--parse-artist artists))))
+
+;;;###autoload
+(defun musicbrainz-lookup-collection-recordings (collection-id &optional limit offset callback)
+  "Look up recordings in collection by COLLECTION-ID.
+If CALLBACK provided, performs async request."
+  (if callback
+      (musicbrainz--request (format "collection/%s/recordings" collection-id) nil limit offset
+        (lambda (json)
+          (when-let* ((recordings (alist-get 'recordings json)))
+            (funcall callback (mapcar #'musicbrainz--parse-recording recordings)))))
+    (when-let* ((json (musicbrainz--request (format "collection/%s/recordings" collection-id) nil limit offset))
+                (recordings (alist-get 'recordings json)))
+      (mapcar #'musicbrainz--parse-recording recordings))))
+
+;;; URL lookup by resource
+
+;;;###autoload
+(defun musicbrainz-lookup-url-by-resource (resource &optional inc callback)
+  "Look up URL entity by RESOURCE string.
+If CALLBACK provided, performs async request."
+  (if callback
+      (let ((url (musicbrainz-url-url-lookup-by-resource resource inc)))
+        (musicbrainz--rate-limit)
+        (pdd url
+             :headers (musicbrainz-build-headers)
+             :as #'musicbrainz--json-read
+             :done (lambda (&key body &allow-other-keys)
+                     (funcall callback (musicbrainz--parse-url body)))))
+    (musicbrainz--rate-limit)
+    (let* ((url (musicbrainz-url-url-lookup-by-resource resource inc))
+           (response (musicbrainz--request-with-retry url nil musicbrainz-max-retries)))
+      (when response
+        (musicbrainz--parse-url response)))))
 
 ;;; Cover Art Archive
 

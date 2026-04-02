@@ -118,6 +118,60 @@
     (genre-all
      . "genre/all?limit={limit}&offset={offset}&fmt=json")
 
+    ;; Disc ID endpoints
+    (discid-lookup
+     . "discid/{discid}?inc={inc}&fmt=json")
+
+    ;; ISRC endpoints
+    (isrc-lookup
+     . "isrc/{isrc}?inc={inc}&fmt=json")
+
+    ;; ISWC endpoints
+    (iswc-lookup
+     . "iswc/{iswc}?inc={inc}&fmt=json")
+
+    ;; PUID endpoints
+    (puid-lookup
+     . "puid/{puid}?inc={inc}&fmt=json")
+
+    ;; CDStub endpoints
+    (cdstub-lookup
+     . "cdstub/{cdstub}?fmt=json")
+    (cdstub-search
+     . "cdstub?query={query}&limit={limit}&offset={offset}&fmt=json")
+
+    ;; FreeDB endpoints
+    (freedb-lookup
+     . "freedb/{freedb}?fmt=json")
+    (freedb-search
+     . "freedb?query={query}&limit={limit}&offset={offset}&fmt=json")
+
+    ;; Collection endpoints
+    (collection-lookup
+     . "collection/{collection}?fmt=json")
+    (collection-releases
+     . "collection/{collection}/releases?limit={limit}&offset={offset}&fmt=json")
+    (collection-artists
+     . "collection/{collection}/artists?limit={limit}&offset={offset}&fmt=json")
+    (collection-recordings
+     . "collection/{collection}/recordings?limit={limit}&offset={offset}&fmt=json")
+    (collection-release-groups
+     . "collection/{collection}/release-groups?limit={limit}&offset={offset}&fmt=json")
+    (collection-labels
+     . "collection/{collection}/labels?limit={limit}&offset={offset}&fmt=json")
+    (collection-works
+     . "collection/{collection}/works?limit={limit}&offset={offset}&fmt=json")
+    (collection-events
+     . "collection/{collection}/events?limit={limit}&offset={offset}&fmt=json")
+    (collection-places
+     . "collection/{collection}/places?limit={limit}&offset={offset}&fmt=json")
+
+    ;; Annotation endpoints
+    (annotation-lookup
+     . "annotation/{entity}/{mbid}?fmt=json")
+    (annotation-search
+     . "annotation?query={query}&limit={limit}&offset={offset}&fmt=json")
+
     ;; Generic lookup (for unknown entities)
     (generic-lookup
      . "{entity}/{mbid}?inc={inc}&fmt=json")
@@ -360,6 +414,155 @@ PARAMS is a list of (PARAM-NAME . VALUE) cons cells."
   "Construct URL for browsing all genres with LIMIT and OFFSET."
   (musicbrainz-url-construct 'genre-all
                              (cons 'limit (number-to-string (or limit 100)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;; Disc ID URLs
+;;;###autoload
+(defun musicbrainz-url-discid-lookup (discid &optional inc)
+  "Construct URL for disc ID lookup by DISCID with optional INCLUDES."
+  (musicbrainz-url-construct 'discid-lookup
+                             (cons 'discid discid)
+                             (cons 'inc (or inc ""))))
+
+;; ISRC URLs
+;;;###autoload
+(defun musicbrainz-url-isrc-lookup (isrc &optional inc)
+  "Construct URL for ISRC lookup by ISRC with optional INCLUDES."
+  (musicbrainz-url-construct 'isrc-lookup
+                             (cons 'isrc isrc)
+                             (cons 'inc (or inc ""))))
+
+;; ISWC URLs
+;;;###autoload
+(defun musicbrainz-url-iswc-lookup (iswc &optional inc)
+  "Construct URL for ISWC lookup by ISWC with optional INCLUDES."
+  (musicbrainz-url-construct 'iswc-lookup
+                             (cons 'iswc iswc)
+                             (cons 'inc (or inc ""))))
+
+;; PUID URLs
+;;;###autoload
+(defun musicbrainz-url-puid-lookup (puid &optional inc)
+  "Construct URL for PUID lookup by PUID with optional INCLUDES."
+  (musicbrainz-url-construct 'puid-lookup
+                             (cons 'puid puid)
+                             (cons 'inc (or inc ""))))
+
+;; CDStub URLs
+;;;###autoload
+(defun musicbrainz-url-cdstub-lookup (cdstub)
+  "Construct URL for CDStub lookup by CDSTUB."
+  (musicbrainz-url-construct 'cdstub-lookup
+                             (cons 'cdstub cdstub)))
+
+;;;###autoload
+(defun musicbrainz-url-cdstub-search (query &optional limit offset)
+  "Construct URL for CDStub search with QUERY, LIMIT, and OFFSET."
+  (musicbrainz-url-construct 'cdstub-search
+                             (cons 'query (url-encode-url query))
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;; FreeDB URLs
+;;;###autoload
+(defun musicbrainz-url-freedb-lookup (freedb)
+  "Construct URL for FreeDB lookup by FREEDB."
+  (musicbrainz-url-construct 'freedb-lookup
+                             (cons 'freedb freedb)))
+
+;;;###autoload
+(defun musicbrainz-url-freedb-search (query &optional limit offset)
+  "Construct URL for FreeDB search with QUERY, LIMIT, and OFFSET."
+  (musicbrainz-url-construct 'freedb-search
+                             (cons 'query (url-encode-url query))
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;; Collection URLs
+;;;###autoload
+(defun musicbrainz-url-collection-lookup (collection)
+  "Construct URL for collection lookup by COLLECTION."
+  (musicbrainz-url-construct 'collection-lookup
+                             (cons 'collection collection)))
+
+;;;###autoload
+(defun musicbrainz-url-collection-releases (collection &optional limit offset)
+  "Construct URL for collection releases by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-releases
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;;;###autoload
+(defun musicbrainz-url-collection-artists (collection &optional limit offset)
+  "Construct URL for collection artists by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-artists
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;;;###autoload
+(defun musicbrainz-url-collection-recordings (collection &optional limit offset)
+  "Construct URL for collection recordings by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-recordings
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;;;###autoload
+(defun musicbrainz-url-collection-release-groups (collection &optional limit offset)
+  "Construct URL for collection release groups by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-release-groups
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;;;###autoload
+(defun musicbrainz-url-collection-labels (collection &optional limit offset)
+  "Construct URL for collection labels by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-labels
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;;;###autoload
+(defun musicbrainz-url-collection-works (collection &optional limit offset)
+  "Construct URL for collection works by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-works
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;;;###autoload
+(defun musicbrainz-url-collection-events (collection &optional limit offset)
+  "Construct URL for collection events by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-events
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;;;###autoload
+(defun musicbrainz-url-collection-places (collection &optional limit offset)
+  "Construct URL for collection places by COLLECTION with LIMIT and OFFSET."
+  (musicbrainz-url-construct 'collection-places
+                             (cons 'collection collection)
+                             (cons 'limit (number-to-string (or limit 25)))
+                             (cons 'offset (number-to-string (or offset 0)))))
+
+;; Annotation URLs
+;;;###autoload
+(defun musicbrainz-url-annotation-lookup (entity mbid)
+  "Construct URL for annotation lookup by ENTITY and MBID."
+  (musicbrainz-url-construct 'annotation-lookup
+                             (cons 'entity entity)
+                             (cons 'mbid mbid)))
+
+;;;###autoload
+(defun musicbrainz-url-annotation-search (query &optional limit offset)
+  "Construct URL for annotation search with QUERY, LIMIT, and OFFSET."
+  (musicbrainz-url-construct 'annotation-search
+                             (cons 'query (url-encode-url query))
+                             (cons 'limit (number-to-string (or limit 25)))
                              (cons 'offset (number-to-string (or offset 0)))))
 
 ;;; Generic URL Construction

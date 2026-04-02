@@ -503,6 +503,81 @@ FORMAT-FUNC formats an item for display. CALLBACK receives the selected item."
           (if (oref genre disambiguation)
               (format " (%s)" (oref genre disambiguation)) "")))
 
+;;; Additional format functions for new entities
+
+(defun musicbrainz-org--format-relation-for-selection (relation)
+  "Format RELATION for selection display."
+  (format "%s -> %s%s"
+          (oref relation type)
+          (oref relation target-type)
+          (if (oref relation ended) " (ended)" "")))
+
+(defun musicbrainz-org--format-annotation-for-selection (annotation)
+  "Format ANNOTATION for selection display."
+  (format "%s: %s"
+          (oref annotation type)
+          (if-let* ((text (oref annotation text)))
+              (substring text 0 (min 50 (length text)))
+            "No text")))
+
+(defun musicbrainz-org--format-collection-for-selection (collection)
+  "Format COLLECTION for selection display."
+  (format "%s (%d items)"
+          (oref collection name)
+          (or (oref collection entity-count) 0)))
+
+(defun musicbrainz-org--format-cdstub-for-selection (cdstub)
+  "Format CDSTUB for selection display."
+  (format "%s - %s"
+          (or (oref cdstub artist) "Unknown")
+          (or (oref cdstub title) "Unknown")))
+
+(defun musicbrainz-org--format-disc-for-selection (disc)
+  "Format DISC for selection display."
+  (format "Disc ID: %s (%d releases)"
+          (oref disc id)
+          (length (or (oref disc release-list) '()))))
+
+(defun musicbrainz-org--format-isrc-for-selection (isrc)
+  "Format ISRC for selection display."
+  (format "ISRC: %s (%d recordings)"
+          (oref isrc id)
+          (length (or (oref isrc recording-list) '()))))
+
+(defun musicbrainz-org--format-iswc-for-selection (iswc)
+  "Format ISWC for selection display."
+  (format "ISWC: %s (%d works)"
+          (oref iswc id)
+          (length (or (oref iswc work-list) '()))))
+
+(defun musicbrainz-org--format-puid-for-selection (puid)
+  "Format PUID for selection display."
+  (format "PUID: %s (%d recordings)"
+          (oref puid id)
+          (length (or (oref puid recording-list) '()))))
+
+(defun musicbrainz-org--format-tag-for-selection (tag)
+  "Format TAG for selection display."
+  (format "%s%s"
+          (oref tag name)
+          (if-let* ((count (oref tag count)))
+              (format " (%d)" count) "")))
+
+(defun musicbrainz-org--format-medium-for-selection (medium)
+  "Format MEDIUM for selection display."
+  (format "%s - %s"
+          (or (oref medium format) "Unknown format")
+          (or (oref medium title) (format "Position %d" (or (oref medium position) 0)))))
+
+(defun musicbrainz-org--format-track-for-selection (track)
+  "Format TRACK for selection display."
+  (format "%s. %s%s"
+          (or (oref track number) "?")
+          (oref track title)
+          (if-let* ((length (oref track length)))
+              (format " (%d:%02d)" (/ length 60000) (/ (mod length 60000) 1000))
+            "")))
+
 ;;; Insert functions
 
 ;;;###autoload
@@ -1240,6 +1315,167 @@ Looks up front cover from coverartarchive.org."
       (when (fboundp 'org-display-inline-images)
         (org-display-inline-images nil nil (point-min) (point)))
       (insert "\n"))))
+
+;;; Additional insert functions for new entities
+
+;;;###autoload
+(defun musicbrainz-org-insert-relations (entity-type mbid &optional level)
+  "Insert relations for ENTITY-TYPE by MBID at LEVEL."
+  (interactive
+   (list (completing-read "Entity type: "
+                          '("artist" "release" "recording" "work" "label"))
+         (read-string "MBID: ")
+         musicbrainz-org-default-level))
+  (let ((level (or level musicbrainz-org-default-level))
+        (target-buf (current-buffer)))
+    (cond
+     ((string= entity-type "artist")
+      (musicbrainz-lookup-artist-relations mbid
+        (lambda (result)
+          (with-current-buffer target-buf
+            (let ((artist (plist-get result :artist))
+                  (relations (plist-get result :relations)))
+              (insert (make-string level ?*) " Relations for " (oref artist name) "\n")
+              (dolist (rel relations)
+                (insert (format "- %s -> %s%s\n"
+                                (oref rel type)
+                                (oref rel target-type)
+                                (if (oref rel ended) " (ended)" ""))))
+              (insert "\n"))))))
+     ((string= entity-type "release")
+      (musicbrainz-lookup-release-relations mbid
+        (lambda (result)
+          (with-current-buffer target-buf
+            (let ((release (plist-get result :release))
+                  (relations (plist-get result :relations)))
+              (insert (make-string level ?*) " Relations for " (oref release title) "\n")
+              (dolist (rel relations)
+                (insert (format "- %s -> %s%s\n"
+                                (oref rel type)
+                                (oref rel target-type)
+                                (if (oref rel ended) " (ended)" ""))))
+              (insert "\n"))))))
+     ((string= entity-type "recording")
+      (musicbrainz-lookup-recording-relations mbid
+        (lambda (result)
+          (with-current-buffer target-buf
+            (let ((recording (plist-get result :recording))
+                  (relations (plist-get result :relations)))
+              (insert (make-string level ?*) " Relations for " (oref recording title) "\n")
+              (dolist (rel relations)
+                (insert (format "- %s -> %s%s\n"
+                                (oref rel type)
+                                (oref rel target-type)
+                                (if (oref rel ended) " (ended)" ""))))
+              (insert "\n"))))))
+     ((string= entity-type "work")
+      (musicbrainz-lookup-work-relations mbid
+        (lambda (result)
+          (with-current-buffer target-buf
+            (let ((work (plist-get result :work))
+                  (relations (plist-get result :relations)))
+              (insert (make-string level ?*) " Relations for " (oref work title) "\n")
+              (dolist (rel relations)
+                (insert (format "- %s -> %s%s\n"
+                                (oref rel type)
+                                (oref rel target-type)
+                                (if (oref rel ended) " (ended)" ""))))
+              (insert "\n"))))))
+     ((string= entity-type "label")
+      (musicbrainz-lookup-label-relations mbid
+        (lambda (result)
+          (with-current-buffer target-buf
+            (let ((label (plist-get result :label))
+                  (relations (plist-get result :relations)))
+              (insert (make-string level ?*) " Relations for " (oref label name) "\n")
+              (dolist (rel relations)
+                (insert (format "- %s -> %s%s\n"
+                                (oref rel type)
+                                (oref rel target-type)
+                                (if (oref rel ended) " (ended)" ""))))
+              (insert "\n")))))))))
+
+;;;###autoload
+(defun musicbrainz-org-insert-disc-id-releases (disc-id &optional level)
+  "Insert releases for DISC-ID at LEVEL."
+  (interactive
+   (list (read-string "Disc ID: ")
+         musicbrainz-org-default-level))
+  (let ((level (or level musicbrainz-org-default-level))
+        (target-buf (current-buffer)))
+    (musicbrainz-lookup-disc-id-releases disc-id
+      (lambda (releases)
+        (with-current-buffer target-buf
+          (if releases
+              (progn
+                (insert (make-string level ?*) " Releases for Disc ID " disc-id "\n")
+                (dolist (release releases)
+                  (insert (format "- %s - %s (%s)\n"
+                                  (or (oref release artist) "Unknown")
+                                  (oref release title)
+                                  (or (oref release date) "?"))))
+                (insert "\n"))
+            (message "No releases found for disc ID: %s" disc-id)))))))
+
+;;;###autoload
+(defun musicbrainz-org-insert-isrc-recordings (isrc &optional level)
+  "Insert recordings for ISRC at LEVEL."
+  (interactive
+   (list (read-string "ISRC: ")
+         musicbrainz-org-default-level))
+  (let ((level (or level musicbrainz-org-default-level))
+        (target-buf (current-buffer)))
+    (musicbrainz-lookup-isrc-recordings isrc
+      (lambda (recordings)
+        (with-current-buffer target-buf
+          (if recordings
+              (progn
+                (insert (make-string level ?*) " Recordings for ISRC " isrc "\n")
+                (dolist (recording recordings)
+                  (insert (format "- %s\n" (oref recording title))))
+                (insert "\n"))
+            (message "No recordings found for ISRC: %s" isrc)))))))
+
+;;;###autoload
+(defun musicbrainz-org-insert-iswc-works (iswc &optional level)
+  "Insert works for ISWC at LEVEL."
+  (interactive
+   (list (read-string "ISWC: ")
+         musicbrainz-org-default-level))
+  (let ((level (or level musicbrainz-org-default-level))
+        (target-buf (current-buffer)))
+    (musicbrainz-lookup-iswc-works iswc
+      (lambda (works)
+        (with-current-buffer target-buf
+          (if works
+              (progn
+                (insert (make-string level ?*) " Works for ISWC " iswc "\n")
+                (dolist (work works)
+                  (insert (format "- %s\n" (oref work title))))
+                (insert "\n"))
+            (message "No works found for ISWC: %s" iswc)))))))
+
+;;;###autoload
+(defun musicbrainz-org-insert-collection-releases (collection-id &optional level)
+  "Insert releases for collection at LEVEL."
+  (interactive
+   (list (read-string "Collection ID: ")
+         musicbrainz-org-default-level))
+  (let ((level (or level musicbrainz-org-default-level))
+        (target-buf (current-buffer)))
+    (musicbrainz-lookup-collection-releases collection-id nil nil
+      (lambda (releases)
+        (with-current-buffer target-buf
+          (if releases
+              (progn
+                (insert (make-string level ?*) " Releases in Collection " collection-id "\n")
+                (dolist (release releases)
+                  (insert (format "- %s - %s (%s)\n"
+                                  (or (oref release artist) "Unknown")
+                                  (oref release title)
+                                  (or (oref release date) "?"))))
+                (insert "\n"))
+            (message "No releases found in collection: %s" collection-id)))))))
 
 (provide 'musicbrainz-org)
 
