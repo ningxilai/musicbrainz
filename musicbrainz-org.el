@@ -595,7 +595,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search artist: ")))
         (musicbrainz-org--search-async
          query "artist" 'artists
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s%s%s)"
                     (or (alist-get 'name item) "?")
                     (or (alist-get 'type item) "Unknown")
@@ -627,7 +627,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search release: ")))
         (musicbrainz-org--search-async
          query "release" 'releases
-         '(lambda (item)
+         #'(lambda (item)
             (let ((ac (alist-get 'artist-credit item)))
               (format "%s - %s (%s%s%s)"
                       (if (consp ac)
@@ -655,7 +655,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search label: ")))
         (musicbrainz-org--search-async
          query "label" 'labels
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s%s%s)"
                     (or (alist-get 'name item) "?")
                     (or (alist-get 'type item) "Unknown")
@@ -679,7 +679,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search work: ")))
         (musicbrainz-org--search-async
          query "work" 'works
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s%s)"
                     (or (alist-get 'title item) "?")
                     (or (alist-get 'type item) "Unknown")
@@ -702,7 +702,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search area: ")))
         (musicbrainz-org--search-async
          query "area" 'areas
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s%s)"
                     (or (alist-get 'name item) "?")
                     (or (alist-get 'type item) "Unknown")
@@ -726,7 +726,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search event: ")))
         (musicbrainz-org--search-async
          query "event" 'events
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s%s)"
                     (or (alist-get 'name item) "?")
                     (or (alist-get 'type item) "Unknown")
@@ -749,7 +749,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search instrument: ")))
         (musicbrainz-org--search-async
          query "instrument" 'instruments
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s)"
                     (or (alist-get 'name item) "?")
                     (or (alist-get 'type item) "Unknown")))
@@ -771,7 +771,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search place: ")))
         (musicbrainz-org--search-async
          query "place" 'places
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s%s)"
                     (or (alist-get 'name item) "?")
                     (or (alist-get 'type item) "Unknown")
@@ -794,7 +794,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search series: ")))
         (musicbrainz-org--search-async
          query "series" 'series
-         '(lambda (item)
+         #'(lambda (item)
             (format "%s (%s)"
                     (or (alist-get 'name item) "?")
                     (or (alist-get 'type item) "Unknown")))
@@ -816,7 +816,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search URL: ")))
         (musicbrainz-org--search-async
          query "url" 'urls
-         '(lambda (item) (format "%s" (or (alist-get 'resource item) "?")))
+         #'(lambda (item) (format "%s" (or (alist-get 'resource item) "?")))
          #'musicbrainz--parse-url
          #'musicbrainz-org-insert-url level)))))
 
@@ -875,7 +875,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search recording: ")))
         (musicbrainz-org--search-async
          query "recording" 'recordings
-         '(lambda (item)
+         #'(lambda (item)
             (let ((ac (alist-get 'artist-credit item)))
               (format "%s - %s (%s)"
                       (if (consp ac)
@@ -905,7 +905,7 @@ When called interactively, searches asynchronously and selects one to insert."
       (let ((query (read-string "Search release group: ")))
         (musicbrainz-org--search-async
          query "release-group" 'release-groups
-         '(lambda (item)
+         #'(lambda (item)
             (let ((ac (alist-get 'artist-credit item)))
               (format "%s - %s (%s)"
                       (if (consp ac)
@@ -1262,14 +1262,14 @@ Shows selection interface if multiple results are found."
                (items (if (vectorp raw) (append raw nil) raw)))
           (if items
               (let* ((formatted (mapcar
-                                 '(lambda (item)
-                                    (let ((ac (alist-get 'artist-credit item)))
-                                      (format "%s - %s (%s)"
-                                              (if (consp ac)
-                                                  (or (alist-get 'name (car (alist-get 'artist (car ac)))) "Unknown")
-                                                "Unknown")
-                                              (or (alist-get 'title item) "?")
-                                              (or (alist-get 'date item) "?"))))
+                                 #'(lambda (item)
+                                     (let ((ac (alist-get 'artist-credit item)))
+                                       (format "%s - %s (%s)"
+                                               (if (consp ac)
+                                                   (or (alist-get 'name (car (alist-get 'artist (car ac)))) "Unknown")
+                                                 "Unknown")
+                                               (or (alist-get 'title item) "?")
+                                               (or (alist-get 'date item) "?"))))
                                  items))
                      (choice (completing-read
                               (format "Select [%d]: " (length formatted))

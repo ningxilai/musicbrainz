@@ -1919,26 +1919,6 @@ If CALLBACK provided, performs async request."
                 (recordings (alist-get 'recordings json)))
       (mapcar #'musicbrainz--parse-recording recordings))))
 
-;;; URL lookup by resource
-
-;;;###autoload
-(defun musicbrainz-lookup-url-by-resource (resource &optional inc callback)
-  "Look up URL entity by RESOURCE string.
-If CALLBACK provided, performs async request."
-  (if callback
-      (let ((url (musicbrainz-url-url-lookup-by-resource resource inc)))
-        (musicbrainz--rate-limit)
-        (pdd url
-             :headers (musicbrainz-build-headers)
-             :as #'musicbrainz--json-read
-             :done (lambda (&key body &allow-other-keys)
-                     (funcall callback (musicbrainz--parse-url body)))))
-    (musicbrainz--rate-limit)
-    (let* ((url (musicbrainz-url-url-lookup-by-resource resource inc))
-           (response (musicbrainz--request-with-retry url nil musicbrainz-max-retries)))
-      (when response
-        (musicbrainz--parse-url response)))))
-
 ;;; Cover Art Archive
 
 (defun musicbrainz-cover-art-url (mbid &optional size)
