@@ -5,7 +5,7 @@ httr_get <- function(url, format = "json") {
     url,
     httr::add_headers(
       Accept = accept_type,
-      "user-agent" = "musicbrainz R package"
+      "user-agent" = "musicbrainz/0.0.0.9000 (https://github.com/dmi3kno/musicbrainz)"
     )
   )
 }

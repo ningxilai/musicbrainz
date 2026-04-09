@@ -123,6 +123,11 @@ parse_list <- function(type, res_lst, offset, hit_count) {
 
   res_lst_xtr <- get_main_parser_lst(type)
 
+  # Convert data.frame to list of rows if needed
+  if (is.data.frame(res_lst)) {
+    res_lst <- split(res_lst, seq_len(nrow(res_lst)))
+  }
+
   res_df <- purrr::map_dfr(res_lst, function(x) purrr::map(res_lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA)))
 
   res_df$score <- as.integer(res_df$score)
