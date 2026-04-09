@@ -10,12 +10,18 @@ httr_get <- function(url, format = "json") {
   )
 }
 
+# Rate limiting configuration (matching MusicBrainz API policy: 1 request per second)
 #' @importFrom ratelimitr rate limit_rate
-httr_get_rate_ltd <- function(url, format = "json") {
+#' @keywords internal
+mb_rate_limit <- function(n = 1, period = 1.1) {
   ratelimitr::limit_rate(
-    function(u) httr_get(u, format),
-    ratelimitr::rate(n = 1, period = 1.6)
-  )(url)
+    function(u) httr_get(u),
+    ratelimitr::rate(n = n, period = period)
+  )
+}
+
+httr_get_rate_ltd <- function(url, format = "json") {
+  mb_rate_limit(n = 1, period = 1.1)(url)
 }
 
 #' @importFrom httr status_code content
@@ -97,7 +103,13 @@ search_by_query <- function(type, query, limit, offset, format = "json") {
   # API request function for search
   # search:   /<ENTITY>?query=<QUERY>&limit=<LIMIT>&offset=<OFFSET>
   base_url <- "http://musicbrainz.org/ws/2"
-  url <- base::paste(c(base_url, type), collapse = "/")
+  
+  # genre uses special /all endpoint
+  if (type == "genre") {
+    url <- base::paste(c(base_url, "genre", "all"), collapse = "/")
+  } else {
+    url <- base::paste(c(base_url, type), collapse = "/")
+  }
 
   parsed_url <- httr::parse_url(url)
   parsed_url$query <- base::list(query = query, limit = limit, offset = offset)

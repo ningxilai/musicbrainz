@@ -293,3 +293,46 @@ search_works <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
   if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
   res_df
 }
+
+#' @describeIn search Search genres (all genres, not searchable)
+#' @importFrom purrr pluck
+#' @importFrom dplyr filter
+#' @export
+search_genres <- function(limit = NULL, offset = NULL, all = FALSE) {
+  if (all) {
+    all_genres <- tibble::tibble(mbid = character(), name = character(), disambiguation = character())
+    batch_size <- 100
+    total_count <- 2132
+    
+    for (i in seq(0, total_count, batch_size)) {
+      res <- search_by_query("genre", "*", batch_size, i)
+      res_df_raw <- purrr::pluck(res, "genres", .default = NULL)
+      
+      if (!is.null(res_df_raw) && nrow(res_df_raw) > 0) {
+        batch_df <- tibble::tibble(
+          mbid = as.character(res_df_raw$id),
+          name = as.character(res_df_raw$name),
+          disambiguation = as.character(res_df_raw$disambiguation)
+        )
+        all_genres <- dplyr::bind_rows(all_genres, batch_df)
+      }
+    }
+    return(all_genres)
+  }
+  
+  res <- search_by_query("genre", "*", limit, offset)
+
+  res_df_raw <- purrr::pluck(res, "genres", .default = NULL)
+
+  if (is.null(res_df_raw) || nrow(res_df_raw) == 0) {
+    return(NULL)
+  }
+
+  res_df <- tibble::tibble(
+    mbid = as.character(res_df_raw$id),
+    name = as.character(res_df_raw$name),
+    disambiguation = as.character(res_df_raw$disambiguation)
+  )
+
+  res_df
+}

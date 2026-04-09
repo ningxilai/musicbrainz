@@ -62,7 +62,13 @@ get_main_parser_lst <-function(type){
                         disambiguation = "disambiguation", description = "description"),
     "series",      list(mbid = "id", type = "type", score = "score", name = "name", disambiguation = "disambiguation"),
     "works",       list(mbid = "id", type = "type", score = "score", title = "title",
-                        language = "language", disambiguation = "disambiguation")
+                        language = "language", disambiguation = "disambiguation"),
+    "urls",        list(mbid = "id", type = "type", resource = "resource", relation_type = "relation-type",
+                        relation_type_id = "relation-type-id"),
+    "genres",      list(mbid = "id", name = "name", disambiguation = "disambiguation"),
+    "relations",   list(relation_type = "type", relation_type_id = "type-id", direction = "direction",
+                        target_type = "target-type", target_id = list("target", "id"),
+                        target_name = list("target", "name"), begin = "begin", end = "end", ended = "ended")
   )
   dplyr::filter(parsers_df, .data$nm == type)[["lst_xtr"]][[1]] # or pull and flatten
 }
@@ -100,7 +106,9 @@ get_main_parser_lst_ld <- function(type) {
     "series",     list(mbid = "@id", type = "@type", name = "name", description = "description"),
     "work",       list(mbid = "@id", type = "@type", name = "name", language = "inLanguage",
                        description = "description", composer = "composer", lyricist = "lyricist",
-                       genre = "genre")
+                       genre = "genre"),
+    "url",        list(mbid = "@id", type = "@type", resource = "url", description = "description"),
+    "genre",      list(mbid = "@id", name = "name", description = "description", disambiguation = "disambiguation")
   )
   dplyr::filter(parsers_df, .data$nm == type)[["lst_xtr"]][[1]]
 }
@@ -196,8 +204,8 @@ parse_list_ld <- function(res) {
 #' @keywords internal
 get_includes_parser_df <- function(res, includes) {
   df <- tibble::tibble(
-    nm = c("releases", "recordings", "release-groups", "works", "artists", "labels", "media", "tags"),
-    node=c("releases", "recordings", "release-groups", "works", "artist-credit", "label-info", "media", "tags"),
+    nm = c("releases", "recordings", "release-groups", "works", "artists", "labels", "media", "tags", "artist-rels"),
+    node=c("releases", "recordings", "release-groups", "works", "artist-credit", "label-info", "media", "tags", "relations"),
     lst_xtr = list(
       list(
         release_mbid = "id", barcode = "barcode", packaging_id = "packaging-id",
@@ -228,7 +236,12 @@ get_includes_parser_df <- function(res, includes) {
         catalog_number = "catalog-number"
       ),
       list(format = "format", disc_count = "disc-count", track_count = "track-count"),
-      list(tag_name = "name", tag_count = "count")
+      list(tag_name = "name", tag_count = "count"),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name")
+      )
     )
   )
   df <- dplyr::filter(df, .data$nm %in% includes)
@@ -264,7 +277,14 @@ get_includes_parser_df_ld <- function(res, includes) {
 #' @importFrom purrr map map_dfr pluck
 #' @importFrom tibble tibble
 parse_includes <- function(nm, lst_xtr, lst) {
-  res_lst <- list(purrr::map_dfr(lst, function(x) purrr::map(lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA))))
+  if (is.null(lst) || length(lst) == 0) {
+    res_lst <- list(tibble::tibble())
+  } else if (is.data.frame(lst)) {
+    # data.frame 类型的 includes (如 relations)
+    res_lst <- list(lst)
+  } else {
+    res_lst <- list(purrr::map_dfr(lst, function(x) purrr::map(lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA))))
+  }
   tibble::tibble({{nm}} := res_lst)
 }
 

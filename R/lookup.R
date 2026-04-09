@@ -59,7 +59,7 @@ lookup_area_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_artist_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("recordings", "releases", "release-groups", "works", "tags")
+  available_includes <- c("recordings", "releases", "release-groups", "works", "tags", "artist-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("artist", mbid, includes, format = format)
 
@@ -354,6 +354,62 @@ lookup_work_by_id <- function(mbid, includes = NULL, format = "json") {
   res_df <- purrr::map_dfr(get_main_parser_lst("works"), function(i) purrr::pluck(res, !!!i, .default = NA_character_))
   if(nrow(parsers_df)>0)
     res_df <- dplyr::bind_cols(res_df,  purrr::pmap_dfc(parsers_df, parse_includes))
+
+  res_df
+}
+
+#' @describeIn lookup_entities_by_id lookup URL by mbid.
+#' @param format Format to use: "json" (default) or "jsonld" (not supported for URL)
+#' @importFrom dplyr bind_cols
+#' @importFrom purrr map_dfr pluck pmap_dfc
+#' @export
+lookup_url_by_id <- function(mbid, includes = NULL, format = "json") {
+  if (format == "jsonld") {
+    message("JSON-LD format is not supported for URL entities. Using JSON format instead.")
+    format <- "json"
+  }
+  
+  available_includes <- c("areas", "artists", "events", "instruments", "labels", "places", "recordings", "releases", "release-groups", "series", "works")
+  includes <- validate_includes(includes, available_includes)
+  res <- lookup_by_id("url", mbid, includes, format = format)
+
+  if (is.null(res) || is.null(res$id)) {
+    return(NULL)
+  }
+
+  res_df <- tibble::tibble(
+    mbid = res$id,
+    type = res$type %||% NA_character_,
+    resource = res$resource %||% NA_character_
+  )
+
+  res_df
+}
+
+#' @describeIn lookup_entities_by_id lookup genre by mbid.
+#' @param format Format to use: "json" (default)
+#' @importFrom dplyr bind_cols
+#' @importFrom purrr map_dfr pluck pmap_dfc
+#' @export
+lookup_genre_by_id <- function(mbid, includes = NULL, format = "json") {
+  if (format == "jsonld") {
+    message("JSON-LD format is not supported for genre entities. Using JSON format instead.")
+    format <- "json"
+  }
+  
+  available_includes <- character(0)
+  includes <- validate_includes(includes, available_includes)
+  res <- lookup_by_id("genre", mbid, includes, format = format)
+
+  if (is.null(res) || is.null(res$id)) {
+    return(NULL)
+  }
+
+  res_df <- tibble::tibble(
+    mbid = res$id,
+    name = res$name %||% NA_character_,
+    disambiguation = res$disambiguation %||% NA_character_
+  )
 
   res_df
 }
