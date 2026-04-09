@@ -16,16 +16,8 @@ LazyData: true
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
-Imports: 
-    httr,
-    rlang (>= 0.4.0),
-    tidyr,
-    dplyr,
-    purrr,
-    tibble,
-    ratelimitr,
-    memoise
+    rmarkdown,
+    future
 RoxygenNote: 7.3.1
 VignetteBuilder: knitr
 URL: https://github.com/dmi3kno/musicbrainz,
