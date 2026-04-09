@@ -1,26 +1,29 @@
 #' @importFrom httr GET add_headers
-httr_get <- function(url) {
+httr_get <- function(url, format = "json") {
+  accept_type <- if (format == "jsonld") "application/ld+json" else "application/json"
   httr::GET(
     url,
     httr::add_headers(
-      Accept = "application/json",
+      Accept = accept_type,
       "user-agent" = "musicbrainz R package"
     )
   )
 }
 
 #' @importFrom ratelimitr rate limit_rate
-httr_get_rate_ltd <- ratelimitr::limit_rate(
-  httr_get,
-  ratelimitr::rate(n = 1, period = 1.6)
-)
+httr_get_rate_ltd <- function(url, format = "json") {
+  ratelimitr::limit_rate(
+    function(u) httr_get(u, format),
+    ratelimitr::rate(n = 1, period = 1.6)
+  )(url)
+}
 
 #' @importFrom httr status_code content
-get_data_with_errors <- function(url, verbose) {
+get_data_with_errors <- function(url, verbose, format = "json") {
   # error handling function
 
   # api call
-  mb_data <- httr_get_rate_ltd(url)
+  mb_data <- httr_get_rate_ltd(url, format)
 
   # status check
   status <- httr::status_code(mb_data)
@@ -32,13 +35,19 @@ get_data_with_errors <- function(url, verbose) {
     }
     res <- NULL
   }
-  if (status == 200) res <- httr::content(mb_data, type = "application/json")
+  if (status == 200) {
+    if (format == "jsonld") {
+      res <- jsonlite::fromJSON(content(mb_data, as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
+    } else {
+      res <- jsonlite::fromJSON(content(mb_data, as = "text", encoding = "UTF-8"), simplifyVector = TRUE)
+    }
+  }
   res
 }
 
 # main re-attempt function
-.GET_data <- function(url, verbose=TRUE) { # nolint
-  output <- get_data_with_errors(url, verbose)
+.GET_data <- function(url, verbose = TRUE, format = "json") { # nolint
+  output <- get_data_with_errors(url, verbose, format)
   max_attempts <- 3
 
   try_number <- 1
@@ -51,34 +60,40 @@ get_data_with_errors <- function(url, verbose) {
       }
     }
     Sys.sleep(2^try_number)
-    output <- get_data_with_errors(url, verbose)
+    output <- get_data_with_errors(url, verbose, format)
   }
   output
 }
 
 #' @importFrom memoise memoise
-get_data <- memoise::memoise(.GET_data)
+get_data <- memoise::memoise(function(url, verbose = TRUE, format = "json") {
+  .GET_data(url, verbose, format)
+})
 
 #' @importFrom httr build_url parse_url
 #' @importFrom utils URLencode
-lookup_by_id <- function(resource, mbid, includes) {
+lookup_by_id <- function(resource, mbid, includes, format = "json") {
   # lookup:   /<ENTITY>/<MBID>?inc=<INC>
   # API request function for lookup
-  base_url <- "http://musicbrainz.org/ws/2"
+  if (format == "jsonld") {
+    base_url <- "https://musicbrainz.org"
+  } else {
+    base_url <- "http://musicbrainz.org/ws/2"
+  }
   url <- base::paste(c(base_url, resource, mbid), collapse = "/")
   url <- utils::URLencode(url)
 
-  if (!is.null(includes) && length(includes)) {
+  if (!is.null(includes) && length(includes) && format != "jsonld") {
     parsed_url <- httr::parse_url(url)
     parsed_url$query <- base::list(inc = paste0(includes, collapse = "+"))
     url <- httr::build_url(parsed_url)
   }
 
-  get_data(url)
+  get_data(url, format = format)
 }
 
 #' @importFrom httr build_url
-search_by_query <- function(type, query, limit, offset) {
+search_by_query <- function(type, query, limit, offset, format = "json") {
   # API request function for search
   # search:   /<ENTITY>?query=<QUERY>&limit=<LIMIT>&offset=<OFFSET>
   base_url <- "http://musicbrainz.org/ws/2"
@@ -89,14 +104,14 @@ search_by_query <- function(type, query, limit, offset) {
 
   url <- httr::build_url(parsed_url)
 
-  get_data(url)
+  get_data(url, format = format)
 }
 
 
 #' @importFrom httr build_url
 #' @importFrom stats setNames
 #' @importFrom utils URLencode
-browse_by_lnkd_id <- function(resource, lnk_resource, mbid, includes, limit, offset) {
+browse_by_lnkd_id <- function(resource, lnk_resource, mbid, includes, limit, offset, format = "json") {
   # API request function for search
   # browse:   /<ENTITY>?<ENTITY>=<MBID>&limit=<LIMIT>&offset=<OFFSET>&inc=<INC>
   base_url <- "http://musicbrainz.org/ws/2"
@@ -112,7 +127,7 @@ browse_by_lnkd_id <- function(resource, lnk_resource, mbid, includes, limit, off
 
   url <- httr::build_url(parsed_url)
 
-  get_data(url)
+  get_data(url, format = format)
 }
 
 #' Tidy eval helpers

@@ -67,6 +67,44 @@ get_main_parser_lst <-function(type){
   dplyr::filter(parsers_df, .data$nm == type)[["lst_xtr"]][[1]] # or pull and flatten
 }
 
+#' @importFrom tibble tribble
+#' @importFrom dplyr filter
+#' @keywords internal
+get_main_parser_lst_ld <- function(type) {
+  parsers_df <- tibble::tribble(
+    ~nm,    ~lst_xtr,
+    "artist",     list(mbid = "@id", type = "@type", name = "name", sort_name = "alternateName",
+                       gender = list("@type"), birth_date = "birthDate", death_date = "deathDate",
+                       birth_place = list("birthPlace", "name"), death_place = list("deathPlace", "name"),
+                       country = list("birthPlace", "containedIn", "containedIn", "name"),
+                       genre = "genre", same_as = "sameAs",
+                       member_of = "memberOf", album = "album"),
+    "event",      list(mbid = "@id", name = "name", type = "@type", start_date = "startDate",
+                       end_date = "endDate", location = "location", description = "description"),
+    "label",      list(mbid = "@id", type = "@type", name = "name", alternate_name = "alternateName",
+                       address = "address", same_as = "sameAs", label_code = "identifier"),
+    "place",      list(mbid = "@id", type = "@type", name = "name", address = "address",
+                       latitude = "latitude", longitude = "longitude", description = "description",
+                       contained_in = list("containedInPlace", "name")),
+    "recording",  list(mbid = "@id", name = "name", duration = "duration", description = "description",
+                       by_artist = "byArtist", recording_of = "recordingOf"),
+    "release",    list(mbid = "@id", name = "name", date = "datePublished", country = "country",
+                       format = "musicReleaseFormat", barcode = "gtin14", catalog_number = "catalogNumber",
+                       credited_to = "creditedTo", description = "description"),
+    "release-group", list(mbid = "@id", name = "name", type = "@type", description = "description",
+                          date = "datePublished", album = "album", by_artist = "byArtist"),
+    "area",       list(mbid = "@id", name = "name", type = "@type", iso = "addressCountry",
+                       description = "description", contained_in = "containedIn"),
+    "instrument", list(mbid = "@id", type = "@type", name = "name", description = "description",
+                       same_as = "sameAs"),
+    "series",     list(mbid = "@id", type = "@type", name = "name", description = "description"),
+    "work",       list(mbid = "@id", type = "@type", name = "name", language = "inLanguage",
+                       description = "description", composer = "composer", lyricist = "lyricist",
+                       genre = "genre")
+  )
+  dplyr::filter(parsers_df, .data$nm == type)[["lst_xtr"]][[1]]
+}
+
 
 #' @importFrom purrr map map_dfr pluck
 #' @keywords internal
@@ -77,11 +115,79 @@ parse_list <- function(type, res_lst, offset, hit_count) {
 
   res_lst_xtr <- get_main_parser_lst(type)
 
-  res_df <- purrr::map_dfr(res_lst, ~ purrr::map(res_lst_xtr, function(i) purrr::pluck(.x, !!!i, .default = NA)))
+  res_df <- purrr::map_dfr(res_lst, function(x) purrr::map(res_lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA)))
 
   res_df$score <- as.integer(res_df$score)
 
   res_df
+}
+
+#' @importFrom purrr map map_dfr pluck
+#' @importFrom tibble as_tibble
+#' @keywords internal
+parse_list_ld <- function(res) {
+  if (is.null(res) || is.null(res[["@type"]])) {
+    return(NULL)
+  }
+
+  type_map <- c(
+    "MusicArtist" = "artist",
+    "MusicEvent" = "event",
+    "MusicLabel" = "label",
+    "Place" = "place",
+    "MusicRecording" = "recording",
+    "MusicRelease" = "release",
+    "MusicAlbum" = "release-group",
+    "AdministrativeArea" = "area",
+    "Instrument" = "instrument",
+    "Series" = "series",
+    "Work" = "work",
+    "Person" = "artist",
+    "MusicGroup" = "artist"
+  )
+
+  type_val <- res[["@type"]]
+  if (is.null(type_val)) {
+    return(NULL)
+  }
+
+  type_str <- if (is.character(type_val)) {
+    if (length(type_val) > 1) type_val[[1]] else type_val
+  } else if (is.list(type_val) && length(type_val) > 0) {
+    type_val[[1]]
+  } else {
+    ""
+  }
+
+  mb_type <- if (!is.null(type_map[[type_str]])) {
+    type_map[[type_str]]
+  } else {
+    tolower(gsub(".*:", "", type_str))
+  }
+
+  res_lst_xtr <- get_main_parser_lst_ld(mb_type)
+
+  if (is.null(res_lst_xtr)) {
+    return(NULL)
+  }
+
+  res_df <- purrr::map(res_lst_xtr, function(i) {
+    val <- purrr::pluck(res, !!!i, .default = NA)
+    if (is.null(val)) {
+      NA
+    } else if (is.vector(val) && length(val) > 1) {
+      paste0(val, collapse = "; ")
+    } else {
+      val
+    }
+  })
+
+  mbid_str <- res_df$mbid
+  if (!is.null(mbid_str) && grepl("musicbrainz.org/", mbid_str)) {
+    res_df$mbid <- sub(".*musicbrainz\\.org/[^/]+/([^/]+)$", "\\1", mbid_str)
+  }
+
+  tibble::as_tibble(res_df)
 }
 
 #' @importFrom purrr map map_dfr pluck
@@ -126,14 +232,49 @@ get_includes_parser_df <- function(res, includes) {
     )
   )
   df <- dplyr::filter(df, .data$nm %in% includes)
-  df <- dplyr::mutate(df, lst = purrr::map(.data$node, ~purrr::pluck(res, .x, .default = NULL)))
+  df <- dplyr::mutate(df, lst = purrr::map(.data$node, function(x) purrr::pluck(res, x, .default = NULL)))
+  dplyr::select(df, -.data$node)
+}
+
+#' @importFrom purrr map map_dfr pluck
+#' @importFrom tibble tibble
+#' @importFrom dplyr filter mutate select
+#' @keywords internal
+get_includes_parser_df_ld <- function(res, includes) {
+  df <- tibble::tibble(
+    nm = c("releases", "recordings", "release-groups", "works", "artists", "labels", "media", "tags"),
+    node = c("track", "track", "album", "work", "byArtist", "label", "media", "keywords"),
+    lst_xtr = list(
+      list(release_mbid = "@id", name = "name", date = "datePublished", country = "country",
+           format = "musicReleaseFormat", catalog_number = "catalogNumber", barcode = "gtin14"),
+      list(recording_mbid = "@id", name = "name", duration = "duration", description = "description"),
+      list(release_group_mbid = "@id", name = "name", type = "@type", date = "datePublished"),
+      list(work_mbid = "@id", name = "name", language = "inLanguage", description = "description"),
+      list(artist_mbid = list("@id"), name = "name", sort_name = "alternateName"),
+      list(label_mbid = "@id", name = "name", label_code = "identifier"),
+      list(format = "format", disc_count = "num_discs", track_count = "num_tracks"),
+      list(tag_name = "name", tag_count = "count")
+    )
+  )
+  df <- dplyr::filter(df, .data$nm %in% includes)
+  df <- dplyr::mutate(df, lst = purrr::map(.data$node, function(x) purrr::pluck(res, x, .default = NULL)))
   dplyr::select(df, -.data$node)
 }
 
 #' @importFrom purrr map map_dfr pluck
 #' @importFrom tibble tibble
 parse_includes <- function(nm, lst_xtr, lst) {
-  res_lst <- list(purrr::map_dfr(lst, ~ purrr::map(lst_xtr, function(i) purrr::pluck(.x, !!!i, .default = NA))))
+  res_lst <- list(purrr::map_dfr(lst, function(x) purrr::map(lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA))))
+  tibble::tibble({{nm}} := res_lst)
+}
+
+#' @importFrom purrr map_dfr pluck
+#' @importFrom tibble tibble
+parse_includes_ld <- function(nm, lst_xtr, lst) {
+  if (is.null(lst) || length(lst) == 0) {
+    return(tibble::tibble({{nm}} := list(NULL)))
+  }
+  res_lst <- list(purrr::map_dfr(lst, function(x) purrr::map(lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA))))
   tibble::tibble({{nm}} := res_lst)
 }
 
