@@ -26,31 +26,18 @@
 #' @name async
 NULL
 
-#' @importFrom future future
-#' @export
-plan <- NULL
-
 #' @describeIn async Lookup artist by MBID asynchronously
 #' @param mbid MusicBrainz ID
 #' @param includes Optional includes
-#' @param format Format ("json" or "jsonld")
-#' @note Note: When using multisession/multicore plans, ensure musicbrainz package is 
-#'   installed (not just loaded via devtools::load_all). For development, use 
+#' @param format Format ("json" or "ld-json")
+#' @note Note: When using multisession/multicore plans, ensure musicbrainz package is
+#'   installed (not just loaded via devtools::load_all). For development, use
 #'   \code{plan(sequential)} or \code{plan(tweak(multisession, workers = 1))}.
 #' @export
 lookup_artist_by_id_async <- function(mbid, includes = NULL, format = "json") {
   if (!requireNamespace("future", quietly = TRUE)) {
     stop("Package 'future' required. Install with: install.packages('future')")
   }
-  future::future({
-    lookup_artist_by_id(mbid, includes, format)
-  }, seed = TRUE)
-}
-#' @param mbid MusicBrainz ID
-#' @param includes Optional includes
-#' @param format Format ("json" or "jsonld")
-#' @export
-lookup_artist_by_id_async <- function(mbid, includes = NULL, format = "json") {
   future::future({
     lookup_artist_by_id(mbid, includes, format)
   }, seed = TRUE)
@@ -153,6 +140,10 @@ lookup_genre_by_id_async <- function(mbid, includes = NULL, format = "json") {
 }
 
 #' @describeIn async Search artists asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_artists_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -161,6 +152,10 @@ search_artists_async <- function(query, limit = NULL, offset = NULL, strict = FA
 }
 
 #' @describeIn async Search releases asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_releases_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -169,6 +164,10 @@ search_releases_async <- function(query, limit = NULL, offset = NULL, strict = F
 }
 
 #' @describeIn async Search release-groups asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_release_groups_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -177,6 +176,10 @@ search_release_groups_async <- function(query, limit = NULL, offset = NULL, stri
 }
 
 #' @describeIn async Search recordings asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_recordings_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -185,6 +188,10 @@ search_recordings_async <- function(query, limit = NULL, offset = NULL, strict =
 }
 
 #' @describeIn async Search labels asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_labels_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -193,6 +200,10 @@ search_labels_async <- function(query, limit = NULL, offset = NULL, strict = FAL
 }
 
 #' @describeIn async Search works asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_works_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -201,6 +212,10 @@ search_works_async <- function(query, limit = NULL, offset = NULL, strict = FALS
 }
 
 #' @describeIn async Search areas asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_areas_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -209,6 +224,10 @@ search_areas_async <- function(query, limit = NULL, offset = NULL, strict = FALS
 }
 
 #' @describeIn async Search places asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_places_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -217,6 +236,10 @@ search_places_async <- function(query, limit = NULL, offset = NULL, strict = FAL
 }
 
 #' @describeIn async Search events asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_events_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -225,6 +248,10 @@ search_events_async <- function(query, limit = NULL, offset = NULL, strict = FAL
 }
 
 #' @describeIn async Search instruments asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_instruments_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -233,6 +260,10 @@ search_instruments_async <- function(query, limit = NULL, offset = NULL, strict 
 }
 
 #' @describeIn async Search series asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_series_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -241,6 +272,10 @@ search_series_async <- function(query, limit = NULL, offset = NULL, strict = FAL
 }
 
 #' @describeIn async Search annotations asynchronously
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
 #' @export
 search_annotations_async <- function(query, limit = NULL, offset = NULL, strict = FALSE) {
   future::future({
@@ -249,6 +284,9 @@ search_annotations_async <- function(query, limit = NULL, offset = NULL, strict 
 }
 
 #' @describeIn async Search genres asynchronously
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param all Fetch all genres
 #' @export
 search_genres_async <- function(limit = NULL, offset = NULL, all = FALSE) {
   future::future({
@@ -256,21 +294,11 @@ search_genres_async <- function(limit = NULL, offset = NULL, all = FALSE) {
   }, seed = TRUE)
 }
 
-#' @title Batch Async Lookup
-#' @description Perform multiple lookups in parallel
+#' @describeIn async Batch lookup multiple artists
 #' @param mbids Vector of MBIDs
-#' @param type Entity type (artist, release, etc.)
 #' @param includes Optional includes
-#' @param format Format ("json" or "jsonld")
-#' @param .progress Show progress bar
-#' @return List of results
+#' @param format Format ("json" or "ld-json")
 #' @export
-#' @importFrom furrr future_map_dfr
-#' @examples
-#' \dontrun{
-#' plan(multisession)
-#' lookup_artists_by_id_async(c("mbid1", "mbid2", "mbid3"))
-#' }
 lookup_artists_by_id_async <- function(mbids, includes = NULL, format = "json") {
   future::future({
     purrr::map_dfr(mbids, function(mbid) {
@@ -292,5 +320,112 @@ lookup_releases_by_id_async <- function(mbids, includes = NULL, format = "json")
         error = function(e) tibble::tibble(mbid = mbid, error = as.character(e))
       )
     })
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse artists by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_artists_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  if (!requireNamespace("future", quietly = TRUE)) {
+    stop("Package 'future' required. Install with: install.packages('future')")
+  }
+  future::future({
+    browse_artists_by(entity, mbid, includes, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse events by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_events_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  future::future({
+    browse_events_by(entity, mbid, includes, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse labels by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_labels_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  future::future({
+    browse_labels_by(entity, mbid, includes, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse places by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_places_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  future::future({
+    browse_places_by(entity, mbid, includes, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse recordings by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_recordings_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  future::future({
+    browse_recordings_by(entity, mbid, includes, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse releases by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_releases_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  future::future({
+    browse_releases_by(entity, mbid, includes, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse release groups by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_release_groups_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  future::future({
+    browse_release_groups_by(entity, mbid, includes, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse works by related id asynchronously
+#' @param entity Related entity type
+#' @param mbid MBID of the entity
+#' @param includes Optional includes
+#' @param limit Number of results
+#' @param offset Result offset
+#' @export
+browse_works_by_async <- function(entity, mbid, includes = NULL, limit = NULL, offset = NULL) {
+  future::future({
+    browse_works_by(entity, mbid, includes, limit, offset)
   }, seed = TRUE)
 }

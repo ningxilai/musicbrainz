@@ -1,6 +1,6 @@
 #' @importFrom httr GET add_headers
 httr_get <- function(url, format = "json") {
-  accept_type <- if (format == "jsonld") "application/ld+json" else "application/json"
+  accept_type <- if (format == "ld-json") "application/ld+json" else "application/json"
   httr::GET(
     url,
     httr::add_headers(
@@ -42,7 +42,7 @@ get_data_with_errors <- function(url, verbose, format = "json") {
     res <- NULL
   }
   if (status == 200) {
-    if (format == "jsonld") {
+    if (format == "ld-json") {
       res <- jsonlite::fromJSON(content(mb_data, as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
     } else {
       res <- jsonlite::fromJSON(content(mb_data, as = "text", encoding = "UTF-8"), simplifyVector = TRUE)
@@ -81,7 +81,7 @@ get_data <- memoise::memoise(function(url, verbose = TRUE, format = "json") {
 lookup_by_id <- function(resource, mbid, includes, format = "json") {
   # lookup:   /<ENTITY>/<MBID>?inc=<INC>
   # API request function for lookup
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     base_url <- "https://musicbrainz.org"
   } else {
     base_url <- "http://musicbrainz.org/ws/2"
@@ -89,7 +89,7 @@ lookup_by_id <- function(resource, mbid, includes, format = "json") {
   url <- base::paste(c(base_url, resource, mbid), collapse = "/")
   url <- utils::URLencode(url)
 
-  if (!is.null(includes) && length(includes) && format != "jsonld") {
+  if (!is.null(includes) && length(includes) && format != "ld-json") {
     parsed_url <- httr::parse_url(url)
     parsed_url$query <- base::list(inc = paste0(includes, collapse = "+"))
     url <- httr::build_url(parsed_url)
@@ -103,7 +103,7 @@ search_by_query <- function(type, query, limit, offset, format = "json") {
   # API request function for search
   # search:   /<ENTITY>?query=<QUERY>&limit=<LIMIT>&offset=<OFFSET>
   base_url <- "http://musicbrainz.org/ws/2"
-  
+
   # genre uses special /all endpoint
   if (type == "genre") {
     url <- base::paste(c(base_url, "genre", "all"), collapse = "/")

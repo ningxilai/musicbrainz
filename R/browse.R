@@ -10,6 +10,9 @@ mb_browse <- function(context, entity, mbid, includes, limit, offset,
 
   # prepare lists
   res_lst <- purrr::pluck(res, paste0(context,"s"), .default = NA)
+  if (is.data.frame(res_lst)) {
+    res_lst <- split(res_lst, seq_len(nrow(res_lst)))
+  }
 
   parsers_lst <- purrr::map(res_lst, ~get_includes_parser_df(.x, includes))
   parsers_df <- purrr::map_dfr(parsers_lst, ~purrr::pmap_dfc(.x, parse_includes))

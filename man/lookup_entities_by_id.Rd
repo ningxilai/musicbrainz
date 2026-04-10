@@ -13,35 +13,43 @@
 \alias{lookup_release_by_id}
 \alias{lookup_series_by_id}
 \alias{lookup_work_by_id}
+\alias{lookup_url_by_id}
+\alias{lookup_genre_by_id}
 \title{Lookup musicbrainz entities by id}
 \usage{
-lookup_area_by_id(mbid, includes = NULL)
+lookup_area_by_id(mbid, includes = NULL, format = "json")
 
-lookup_artist_by_id(mbid, includes = NULL)
+lookup_artist_by_id(mbid, includes = NULL, format = "json")
 
-lookup_event_by_id(mbid, includes = NULL)
+lookup_event_by_id(mbid, includes = NULL, format = "json")
 
-lookup_instrument_by_id(mbid, includes = NULL)
+lookup_instrument_by_id(mbid, includes = NULL, format = "json")
 
-lookup_label_by_id(mbid, includes = NULL)
+lookup_label_by_id(mbid, includes = NULL, format = "json")
 
-lookup_place_by_id(mbid, includes = NULL)
+lookup_place_by_id(mbid, includes = NULL, format = "json")
 
-lookup_recording_by_id(mbid, includes = NULL)
+lookup_recording_by_id(mbid, includes = NULL, format = "json")
 
-lookup_release_group_by_id(mbid, includes = NULL)
+lookup_release_group_by_id(mbid, includes = NULL, format = "json")
 
-lookup_release_by_id(mbid, includes = NULL)
+lookup_release_by_id(mbid, includes = NULL, format = "json")
 
-lookup_series_by_id(mbid, includes = NULL)
+lookup_series_by_id(mbid, includes = NULL, format = "json")
 
-lookup_work_by_id(mbid, includes = NULL)
+lookup_work_by_id(mbid, includes = NULL, format = "json")
+
+lookup_url_by_id(mbid, includes = NULL, format = "json")
+
+lookup_genre_by_id(mbid, includes = NULL, format = "json")
 }
 \arguments{
 \item{mbid}{musicbrainz database id}
 
 \item{includes}{character vector of names of related entities to include. See information
 about avaialable includes in each of the lookup functions.}
+
+\item{format}{Format to use: "json" (default)}
 }
 \value{
 Tibble containing details of the requested entity
@@ -85,6 +93,10 @@ Available includes: tags
 
 \item \code{lookup_work_by_id()}: lookup work by mbid.
 Available includes: tags
+
+\item \code{lookup_url_by_id()}: lookup URL by mbid.
+
+\item \code{lookup_genre_by_id()}: lookup genre by mbid.
 
 }}
 \examples{

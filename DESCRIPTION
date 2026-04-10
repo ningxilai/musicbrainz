@@ -11,15 +11,22 @@ Description: Utilising the 'MusicBrainz Database' API (see <https://musicbrainz.
     as well as the many relationships between them.
 Depends:
     R (>= 3.2.3)
+Imports: 
+    dplyr,
+    future,
+    httr,
+    jsonlite,
+    memoise,
+    purrr,
+    ratelimitr,
+    rlang,
+    tibble,
+    tidyr,
+    utils
 License: MIT + file LICENSE
-LazyData: true
 Suggests: 
-    testthat,
-    knitr,
-    rmarkdown,
-    future
-RoxygenNote: 7.3.1
-VignetteBuilder: knitr
+    testthat
+RoxygenNote: 7.3.3
 URL: https://github.com/dmi3kno/musicbrainz,
 BugReports: https://github.com/dmi3kno/musicbrainz/issues
 Encoding: UTF-8

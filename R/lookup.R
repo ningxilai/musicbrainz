@@ -24,7 +24,7 @@ NULL
 
 #' @describeIn lookup_entities_by_id lookup area by mbid.
 #' Available includes: tags
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -33,7 +33,7 @@ lookup_area_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes(includes, available_includes)
   res <- lookup_by_id("area", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -54,7 +54,7 @@ lookup_area_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup artist by mbid.
 #' Available includes: recordings, releases, release-groups, works and tags.
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -63,7 +63,7 @@ lookup_artist_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("artist", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -84,7 +84,7 @@ lookup_artist_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup event by mbid.
 #' Available includes: tags.
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -93,7 +93,7 @@ lookup_event_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("event", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -115,7 +115,7 @@ lookup_event_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup instrument by mbid.
 #' Available includes: tags.
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -124,7 +124,7 @@ lookup_instrument_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("instrument", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -146,7 +146,7 @@ lookup_instrument_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup label by mbid.
 #' Available includes: releases and tags.
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -155,7 +155,7 @@ lookup_label_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("label", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -176,7 +176,7 @@ lookup_label_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup artist by mbid.
 #' Available includes: tags.
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -185,7 +185,7 @@ lookup_place_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("place", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -207,7 +207,7 @@ lookup_place_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup recording by mbid.
 #' Available includes: artists, releases and tags
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -216,7 +216,7 @@ lookup_recording_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("recording", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -237,7 +237,7 @@ lookup_recording_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup release group by mbid.
 #' Available includes: artists, releases and tags
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -246,7 +246,7 @@ lookup_release_group_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("release-group", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -268,7 +268,7 @@ lookup_release_group_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup release by mbid.
 #' Available includes: artists, labels, recordings, release-groups, and tags
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -277,7 +277,7 @@ lookup_release_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("release", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -298,7 +298,7 @@ lookup_release_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup series by mbid.
 #' Available includes: tags
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -307,7 +307,7 @@ lookup_series_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("series", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -329,7 +329,7 @@ lookup_series_by_id <- function(mbid, includes = NULL, format = "json") {
 
 #' @describeIn lookup_entities_by_id lookup work by mbid.
 #' Available includes: tags
-#' @param format Format to use: "json" (default) or "jsonld"
+#' @param format Format to use: "json" (default) or "ld-json"
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
@@ -338,7 +338,7 @@ lookup_work_by_id <- function(mbid, includes = NULL, format = "json") {
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("work", mbid, includes, format = format)
 
-  if (format == "jsonld") {
+  if (format == "ld-json") {
     res_df <- parse_list_ld(res)
     if (is.null(res_df) || nrow(res_df) == 0) return(NULL)
     parsers_df <- get_includes_parser_df_ld(res, includes)
@@ -359,13 +359,13 @@ lookup_work_by_id <- function(mbid, includes = NULL, format = "json") {
 }
 
 #' @describeIn lookup_entities_by_id lookup URL by mbid.
-#' @param format Format to use: "json" (default) or "jsonld" (not supported for URL)
+#' @param format Format to use: "json" (default) or "ld-json" (not supported for URL)
 #' @importFrom dplyr bind_cols
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_url_by_id <- function(mbid, includes = NULL, format = "json") {
-  if (format == "jsonld") {
-    message("JSON-LD format is not supported for URL entities. Using JSON format instead.")
+  if (format == "ld-json") {
+    message("ld-json format is not supported for URL entities. Using JSON format instead.")
     format <- "json"
   }
   
@@ -392,8 +392,8 @@ lookup_url_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_genre_by_id <- function(mbid, includes = NULL, format = "json") {
-  if (format == "jsonld") {
-    message("JSON-LD format is not supported for genre entities. Using JSON format instead.")
+  if (format == "ld-json") {
+    message("ld-json format is not supported for genre entities. Using JSON format instead.")
     format <- "json"
   }
   

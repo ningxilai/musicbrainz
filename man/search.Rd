@@ -14,6 +14,7 @@
 \alias{search_releases}
 \alias{search_series}
 \alias{search_works}
+\alias{search_genres}
 \title{Search musicbrainz database}
 \usage{
 search_annotations(query, limit = NULL, offset = NULL, strict = FALSE)
@@ -39,6 +40,8 @@ search_releases(query, limit = NULL, offset = NULL, strict = FALSE)
 search_series(query, limit = NULL, offset = NULL, strict = FALSE)
 
 search_works(query, limit = NULL, offset = NULL, strict = FALSE)
+
+search_genres(limit = NULL, offset = NULL, all = FALSE)
 }
 \arguments{
 \item{query}{search string.}
@@ -48,6 +51,8 @@ search_works(query, limit = NULL, offset = NULL, strict = FALSE)
 \item{offset}{number of hits to skip, defaults to NULL}
 
 \item{strict}{return only exact matches with score of 100, defaults to FALSE}
+
+\item{all}{If TRUE, fetch all genres (requires multiple API calls)}
 }
 \value{
 a tibble of entities of interest
@@ -80,6 +85,8 @@ Perform free text search in the musicbrainz database. Scope of each of the `sear
 \item \code{search_series()}: Search series
 
 \item \code{search_works()}: Search works
+
+\item \code{search_genres()}: Search genres (all genres, not searchable)
 
 }}
 \examples{

@@ -83,36 +83,45 @@ search_artists <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
 #' @importFrom dplyr filter bind_cols
 #' @export
 search_events <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
-  # area is not returned. can be looked up from place
   res <- search_by_query("event", query, limit, offset)
 
-  # prepare lists
   res_lst <- purrr::pluck(res, "events", .default = list(NA))
+  if (is.data.frame(res_lst)) {
+    res_lst <- split(res_lst, seq_len(nrow(res_lst)))
+  }
   relations_lst <- purrr::map(res_lst, ~ purrr::pluck(.x, "relations", .default = list(list(NA))))
 
-  relations_lst_xtr <- c(relations_type = "type", reations_direction = "direction")
+  res_df <- parse_list("events", res_lst, offset = res[["offset"]], hit_count = res[["count"]])
 
-  # extract and bind
-  res_df <- dplyr::bind_cols(
-    parse_list("events", res_lst, offset = res[["offset"]], hit_count = res[["count"]]),
-    tibble::tibble(
-      artists = purrr::map(relations_lst, ~ tidyr::drop_na(tibble::tibble(
-        relations_type = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("type"), .default = NA_character_)),
-        relations_direction = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("direction"), .default = NA_character_)),
-        artist_mbid = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "id"), .default = NA_character_)),
-        artist_name = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "name"), .default = NA_character_)),
-        artist_sort_name = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "sort-name"), .default = NA_character_)),
-        artist_disambiguation = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "disambiguation"), .default = NA_character_)),
-      ), artist_mbid)),
-      places = purrr::map(relations_lst, ~ tidyr::drop_na(tibble::tibble(
-        relations_type = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("type"), .default = NA_character_)),
-        relations_direction = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("direction"), .default = NA_character_)),
-        place_mbid = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("place", "id"), .default = NA_character_)),
-        place_name = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("place", "name"), .default = NA_character_)),
-        place_disambiguation = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("place", "disambiguation"), .default = NA_character_))
-      ), place_mbid))
-    )
-  )
+  artists_df <- purrr::map_dfr(relations_lst, function(rel) {
+    if (is.null(rel) || length(rel) == 0 || identical(rel, list(list(NA)))) {
+      return(tibble::tibble(artists_json = list(NA_character_)))
+    }
+    artist_rels <- purrr::keep(rel, ~ {
+      art <- purrr::pluck(.x, "artist", .default = NULL)
+      !is.null(art)
+    })
+    if (length(artist_rels) == 0) {
+      return(tibble::tibble(artists_json = list(NA_character_)))
+    }
+    tibble::tibble(artists_json = list(jsonlite::toJSON(artist_rels, auto_unbox = TRUE)))
+  })
+
+  places_df <- purrr::map_dfr(relations_lst, function(rel) {
+    if (is.null(rel) || length(rel) == 0 || identical(rel, list(list(NA)))) {
+      return(tibble::tibble(places_json = list(NA_character_)))
+    }
+    place_rels <- purrr::keep(rel, ~ {
+      pl <- purrr::pluck(.x, "place", .default = NULL)
+      !is.null(pl)
+    })
+    if (length(place_rels) == 0) {
+      return(tibble::tibble(places_json = list(NA_character_)))
+    }
+    tibble::tibble(places_json = list(jsonlite::toJSON(place_rels, auto_unbox = TRUE)))
+  })
+
+  res_df <- dplyr::bind_cols(res_df, artists_df, places_df)
 
   if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
   res_df
@@ -177,16 +186,40 @@ search_places <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
 search_recordings <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
   res <- search_by_query("recording", query, limit, offset)
 
-  # prepare lists
   res_lst <- purrr::pluck(res, "recordings", .default = NA)
-  parsers_lst <- purrr::map(res_lst, ~get_includes_parser_df(.x, includes=c("artists", "releases")))
+  if (is.data.frame(res_lst)) {
+    res_lst <- split(res_lst, seq_len(nrow(res_lst)))
+  }
 
+  res_df <- parse_list("recordings", res_lst, offset = res[["offset"]], hit_count = res[["count"]])
 
-  # extract and bind
-  res_df <- dplyr::bind_cols(
-    parse_list("recordings", res_lst, offset = res[["offset"]], hit_count = res[["count"]]),
-    purrr::map_dfr(parsers_lst, ~purrr::pmap_dfc(.x, parse_includes))
-  )
+  includes_df <- purrr::map_dfr(res_lst, function(item) {
+    if (is.null(item) || length(item) == 0) {
+      return(tibble::tibble(
+        releases = NA_character_,
+        artists = NA_character_
+      ))
+    }
+    
+    releases_node <- purrr::pluck(item, "releases", .default = NULL)
+    artists_node <- purrr::pluck(item, "artist-credit", .default = NULL)
+    
+    releases_json <- if (!is.null(releases_node) && length(releases_node) > 0) {
+      list(jsonlite::toJSON(releases_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    artists_json <- if (!is.null(artists_node) && length(artists_node) > 0) {
+      list(jsonlite::toJSON(artists_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    tibble::tibble(releases = releases_json, artists = artists_json)
+  })
+
+  res_df <- dplyr::bind_cols(res_df, includes_df)
 
   if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
   res_df
@@ -200,21 +233,43 @@ search_recordings <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
 search_release_groups <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
   res <- search_by_query("release-group", query, limit, offset)
 
-  # prepare lists
   res_lst <- purrr::pluck(res, "release-groups", .default = NA)
-  parsers_lst <- purrr::map(res_lst, ~get_includes_parser_df(.x, includes=c("artists", "releases")))
+  if (is.data.frame(res_lst)) {
+    res_lst <- split(res_lst, seq_len(nrow(res_lst)))
+  }
 
-  artist_credit_lst <- purrr::map(res_lst, ~ purrr::pluck(.x, "artist-credit", .default = NA))
-  releases_lst <- purrr::map(res_lst, ~ purrr::pluck(.x, "releases", .default = NA))
+  res_df <- parse_list("release-groups", res_lst, offset = res[["offset"]], hit_count = res[["count"]])
 
-  # extract and bind
-  res_df <- dplyr::bind_cols(
-    parse_list("release-groups", res_lst, offset = res[["offset"]], hit_count = res[["count"]]),
-    purrr::map_dfr(parsers_lst, ~purrr::pmap_dfc(.x, parse_includes))
-  )
+  includes_df <- purrr::map_dfr(res_lst, function(item) {
+    if (is.null(item) || length(item) == 0) {
+      return(tibble::tibble(
+        releases = list(NA_character_),
+        artists = list(NA_character_)
+      ))
+    }
+    
+    releases_node <- purrr::pluck(item, "releases", .default = NULL)
+    artists_node <- purrr::pluck(item, "artist-credit", .default = NULL)
+    
+    releases_json <- if (!is.null(releases_node) && length(releases_node) > 0) {
+      list(jsonlite::toJSON(releases_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    artists_json <- if (!is.null(artists_node) && length(artists_node) > 0) {
+      list(jsonlite::toJSON(artists_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    tibble::tibble(releases = releases_json, artists = artists_json)
+  })
 
- if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
- res_df
+  res_df <- dplyr::bind_cols(res_df, includes_df)
+
+  if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
+  res_df
 }
 
 #' @describeIn search Search releases
@@ -225,15 +280,56 @@ search_release_groups <- function(query, limit=NULL, offset=NULL, strict=FALSE) 
 search_releases <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
   res <- search_by_query("release", query, limit, offset)
 
-  # prepare lists
   res_lst <- purrr::pluck(res, "releases", .default = NA)
-  parsers_lst <- purrr::map(res_lst, ~get_includes_parser_df(.x, includes=c("artists", "labels", "media")))
+  if (is.data.frame(res_lst)) {
+    res_lst <- split(res_lst, seq_len(nrow(res_lst)))
+  }
 
-  # extract and bind
-  res_df <- dplyr::bind_cols(
-    parse_list("releases", res_lst, offset = res[["offset"]], hit_count = res[["count"]]),
-    purrr::map_dfr(parsers_lst, ~purrr::pmap_dfc(.x, parse_includes))
-  )
+  res_df <- parse_list("releases", res_lst, offset = res[["offset"]], hit_count = res[["count"]])
+
+  includes_df <- purrr::map_dfr(res_lst, function(item) {
+    if (is.null(item) || length(item) == 0) {
+      return(tibble::tibble(
+        releases = list(NA_character_),
+        artists = list(NA_character_),
+        labels = list(NA_character_),
+        media = list(NA_character_)
+      ))
+    }
+    
+    releases_node <- purrr::pluck(item, "releases", .default = NULL)
+    artists_node <- purrr::pluck(item, "artist-credit", .default = NULL)
+    labels_node <- purrr::pluck(item, "label-info", .default = NULL)
+    media_node <- purrr::pluck(item, "media", .default = NULL)
+    
+    releases_json <- if (!is.null(releases_node) && length(releases_node) > 0) {
+      list(jsonlite::toJSON(releases_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    artists_json <- if (!is.null(artists_node) && length(artists_node) > 0) {
+      list(jsonlite::toJSON(artists_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    labels_json <- if (!is.null(labels_node) && length(labels_node) > 0) {
+      list(jsonlite::toJSON(labels_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    media_json <- if (!is.null(media_node) && length(media_node) > 0) {
+      list(jsonlite::toJSON(media_node, auto_unbox = TRUE))
+    } else {
+      list(NA_character_)
+    }
+    
+    tibble::tibble(releases = releases_json, artists = artists_json, labels = labels_json, media = media_json)
+  })
+
+  res_df <- dplyr::bind_cols(res_df, includes_df)
 
   if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
   res_df
@@ -264,37 +360,50 @@ search_series <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
 search_works <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
   res <- search_by_query("work", query, limit, offset)
 
-  # prepare lists
   res_lst <- purrr::pluck(res, "works", .default = NA)
-  relations_lst <- purrr::map(res_lst, ~ purrr::pluck(.x, "relations", .default = NA))
+  if (is.data.frame(res_lst)) {
+    res_lst <- split(res_lst, seq_len(nrow(res_lst)))
+  }
+  relations_lst <- purrr::map(res_lst, ~ purrr::pluck(.x, "relations", .default = list(list(NA))))
 
-    # extract and bind
-  res_df <- dplyr::bind_cols(
-    parse_list("works", res_lst, offset = res[["offset"]], hit_count = res[["count"]]),
-    tibble::tibble(
-      artists = purrr::map(relations_lst, ~ tidyr::drop_na(tibble::tibble(
-        relations_type = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("type"), .default = NA_character_)),
-        relations_direction = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("direction"), .default = NA_character_)),
-        artist_mbid = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "id"), .default = NA_character_)),
-        artist_name = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "name"), .default = NA_character_)),
-        artist_sort_name = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "sort-name"), .default = NA_character_)),
-        artist_disambiguation = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("artist", "disambiguation"), .default = NA_character_)),
-      ), artist_mbid)),
-      recordings = purrr::map(relations_lst, ~ tidyr::drop_na(tibble::tibble(
-        relations_type = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("type"), .default = NA_character_)),
-        relations_direction = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("direction"), .default = NA_character_)),
-        recording_mbid = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("recording", "id"), .default = NA_character_)),
-        recording_title = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("recording", "title"), .default = NA_character_)),
-        recording_video = purrr::map_chr(.x, function(i) purrr::pluck(i, !!!list("recording", "video"), .default = NA_character_))
-      ), recording_mbid))
-    )
-  )
+  res_df <- parse_list("works", res_lst, offset = res[["offset"]], hit_count = res[["count"]])
+
+  artists_df <- purrr::map_dfr(relations_lst, function(rel) {
+    if (is.null(rel) || length(rel) == 0 || identical(rel, list(list(NA)))) {
+      return(tibble::tibble(artists_json = list(NA_character_)))
+    }
+    artist_rels <- purrr::keep(rel, ~ {
+      art <- purrr::pluck(.x, "artist", .default = NULL)
+      !is.null(art)
+    })
+    if (length(artist_rels) == 0) {
+      return(tibble::tibble(artists_json = list(NA_character_)))
+    }
+    tibble::tibble(artists_json = list(jsonlite::toJSON(artist_rels, auto_unbox = TRUE)))
+  })
+
+  recordings_df <- purrr::map_dfr(relations_lst, function(rel) {
+    if (is.null(rel) || length(rel) == 0 || identical(rel, list(list(NA)))) {
+      return(tibble::tibble(recordings_json = list(NA_character_)))
+    }
+    rec_rels <- purrr::keep(rel, ~ {
+      rec <- purrr::pluck(.x, "recording", .default = NULL)
+      !is.null(rec)
+    })
+    if (length(rec_rels) == 0) {
+      return(tibble::tibble(recordings_json = list(NA_character_)))
+    }
+    tibble::tibble(recordings_json = list(jsonlite::toJSON(rec_rels, auto_unbox = TRUE)))
+  })
+
+  res_df <- dplyr::bind_cols(res_df, artists_df, recordings_df)
 
   if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
   res_df
 }
 
 #' @describeIn search Search genres (all genres, not searchable)
+#' @param all If TRUE, fetch all genres (requires multiple API calls)
 #' @importFrom purrr pluck
 #' @importFrom dplyr filter
 #' @export

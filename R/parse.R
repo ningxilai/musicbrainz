@@ -17,23 +17,23 @@ get_main_parser_lst <-function(type){
                        end_area_sort_name = list("end-area", "sort-name"),
                        end_area_disambiguation = list("end-area", "disambiguation"),
                        life_span_begin = list("life-span", "begin"), life_span_end = list("life-span", "end"),
-                       life_span_ended = list("life-span", "ended"), ipis = list("ipis", 1),
-                       isnis = list("isnis", 1)),
+                       life_span_ended = list("life-span", "ended"), ipis = "ipis",
+                       isnis = "isnis"),
     "events",    list(mbid = "id", name = "name", type = "type", type_id = "type-id", score = "score",
-                      time = "time", cancelled = "cancelled", disambiguation = "disambiguation",
-                      begin = list("life-span", "begin"), end = list("life-span", "end"),
-                      ended = list("life-span", "ended"), setlist = "setlist"),
+                       time = "time", cancelled = "cancelled", disambiguation = "disambiguation",
+                       begin = list("life-span", "begin"), end = list("life-span", "end"),
+                       ended = list("life-span", "ended"), setlist = "setlist"),
     "labels",    list(mbid = "id", type = "type", type_id="type-id", score = "score", name = "name", sort_name = "sort-name",
-                      label_code = "label-code", country = "country", disambiguation = "disambiguation",
-                      begin = list("life-span", "begin"), end=list("life-span", "end"), ended=list("life-span", "ended"),
-                      area_id = list("area", "id"), area_name = list("area", "name"), area_sort_name = list("area", "sort-name"),
-                      area_iso = list("area", "iso-3166-1-codes", 1), ipis = list("ipis", 1),
-                      isnis = list("isnis", 1)),
+                       label_code = "label-code", country = "country", disambiguation = "disambiguation",
+                       begin = list("life-span", "begin"), end=list("life-span", "end"), ended=list("life-span", "ended"),
+                       area_id = list("area", "id"), area_name = list("area", "name"), area_sort_name = list("area", "sort-name"),
+                       area_iso = list("area", "iso-3166-1-codes", 1), ipis = "ipis",
+                       isnis = "isnis"),
     "places",    list(mbid = "id", type = "type", type_id="type-id", score = "score", name = "name", address = "address",
-                      disambiguation = "disambiguation", latitude = list("coordinates","latitude"), longitude = list("coordinates","longitude"),
-                      area_id = list("area","id"), area_name = list("area","name"), area_sort_name = list("area","sort-name"),
-                      area_disambiguation=list("area","disambiguation"), area_iso=list("area", "iso-3166-1-codes",1),
-                      place_begin = list("life-span","begin"), place_end = list("life-span","end"), place_ended = list("life-span","ended")),
+                       disambiguation = "disambiguation", latitude = list("coordinates","latitude"), longitude = list("coordinates","longitude"),
+                       area_id = list("area","id"), area_name = list("area","name"), area_sort_name = list("area","sort-name"),
+                       area_disambiguation=list("area","disambiguation"), area_iso=list("area", "iso-3166-1-codes",1),
+                       place_begin = list("life-span","begin"), place_end = list("life-span","end"), place_ended = list("life-span","ended")),
     "recordings", list(mbid = "id", score = "score", title = "title", length = "length", video = "video"),
     "releases",   list(mbid = "id", score = "score", count = "count", title = "title",
                        status = "status", status_id = "status-id", packaging_id = list("packaging", "id"), packaging_name = list("packaging", "name"),
@@ -59,12 +59,12 @@ get_main_parser_lst <-function(type){
                        relation_area_ended = list("relation-list", 1, "relations", 1, "area", "list-span", "ended")),
     "annotations", list(mbid = "entity", type = "type", score = "score", name = "name", text = "text"),
     "instruments", list(mbid = "id", type = "type", score = "score", name = "name",
-                        disambiguation = "disambiguation", description = "description"),
+                       disambiguation = "disambiguation", description = "description"),
     "series",      list(mbid = "id", type = "type", score = "score", name = "name", disambiguation = "disambiguation"),
     "works",       list(mbid = "id", type = "type", score = "score", title = "title",
-                        language = "language", disambiguation = "disambiguation"),
+                       language = "language", disambiguation = "disambiguation"),
     "urls",        list(mbid = "id", type = "type", resource = "resource", relation_type = "relation-type",
-                        relation_type_id = "relation-type-id"),
+                       relation_type_id = "relation-type-id"),
     "genres",      list(mbid = "id", name = "name", disambiguation = "disambiguation"),
     "relations",   list(relation_type = "type", relation_type_id = "type-id", direction = "direction",
                         target_type = "target-type", target_id = list("target", "id"),
@@ -250,8 +250,8 @@ get_includes_parser_df <- function(res, includes) {
     )
   )
   df <- dplyr::filter(df, .data$nm %in% includes)
-  df <- dplyr::mutate(df, lst = purrr::map(.data$node, function(x) purrr::pluck(res, x, .default = NULL)))
-  dplyr::select(df, -.data$node)
+  df <- dplyr::mutate(df, lst = purrr::map(df$node, function(x) purrr::pluck(res, x, .default = NULL)))
+  dplyr::select(df, -"node")
 }
 
 #' @importFrom purrr map map_dfr pluck
@@ -275,8 +275,8 @@ get_includes_parser_df_ld <- function(res, includes) {
     )
   )
   df <- dplyr::filter(df, .data$nm %in% includes)
-  df <- dplyr::mutate(df, lst = purrr::map(.data$node, function(x) purrr::pluck(res, x, .default = NULL)))
-  dplyr::select(df, -.data$node)
+  df <- dplyr::mutate(df, lst = purrr::map(df$node, function(x) purrr::pluck(res, x, .default = NULL)))
+  dplyr::select(df, -"node")
 }
 
 #' @importFrom purrr map map_dfr pluck
