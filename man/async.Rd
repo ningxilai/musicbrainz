@@ -38,6 +38,8 @@
 \alias{browse_releases_by_async}
 \alias{browse_release_groups_by_async}
 \alias{browse_works_by_async}
+\alias{lookup_url_by_resource_async}
+\alias{lookup_release_group_genres_async}
 \alias{lookup_artist_relations_async}
 \alias{browse_collection_releases_async}
 \alias{browse_collection_artists_async}
@@ -166,6 +168,10 @@ browse_works_by_async(
   offset = NULL
 )
 
+lookup_url_by_resource_async(resource, includes = NULL, format = "json")
+
+lookup_release_group_genres_async(mbid, format = "json")
+
 lookup_artist_relations_async(mbid, includes = NULL, format = "json")
 
 browse_collection_releases_async(collection, limit = NULL, offset = NULL)
@@ -281,6 +287,10 @@ These functions return a future that will be resolved asynchronously.
 \item \code{browse_release_groups_by_async()}: Browse release groups by related id asynchronously
 
 \item \code{browse_works_by_async()}: Browse works by related id asynchronously
+
+\item \code{lookup_url_by_resource_async()}: Lookup URL by resource asynchronously
+
+\item \code{lookup_release_group_genres_async()}: Lookup release group genres asynchronously
 
 \item \code{lookup_artist_relations_async()}: Lookup artist relationships asynchronously
 

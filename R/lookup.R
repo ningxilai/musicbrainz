@@ -76,7 +76,10 @@ lookup_artist_by_id <- function(mbid, includes = NULL, format = "json") {
   parsers_df <- get_includes_parser_df(res, includes)
 
   # extract and bind
-  res_df <- purrr::map_dfr(get_main_parser_lst("artists"), function(i) purrr::pluck(res, !!!i, .default = NA_character_))
+  res_df <- purrr::map_dfr(get_main_parser_lst("artists"), function(i) {
+    val <- purrr::pluck(res, !!!i, .default = NA_character_)
+    if (is.na(val)) NA_character_ else as.character(val)
+  })
   if(nrow(parsers_df)>0)
     res_df <- dplyr::bind_cols(res_df,  purrr::pmap_dfc(parsers_df, parse_includes))
   res_df

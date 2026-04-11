@@ -52,6 +52,15 @@ get_data <- memoise::memoise(function(url, verbose = TRUE, format = "json") {
   .GET_data(url, verbose, format)
 })
 
+#' Clear the API cache
+#'
+#' Clears all cached API responses. Use this if you need fresh data.
+#' @export
+clear_cache <- function() {
+  memoise::forget(get_data)
+  invisible(NULL)
+}
+
 lookup_by_id <- function(resource, mbid, includes, format = "json") {
   if (format == "ld-json") {
     base_url <- "https://musicbrainz.org"
@@ -130,7 +139,10 @@ crul_batch_lookup <- function(resource, mbids, includes = NULL, format = "json")
   } else {
     res_lst_xtr <- get_main_parser_lst(resource)
     purrr::map_dfr(results, function(r) {
-      tibble::as_tibble(purrr::map(res_lst_xtr, function(i) purrr::pluck(r, !!!i, .default = NA)))
+      tibble::as_tibble(purrr::map(res_lst_xtr, function(i) {
+        val <- purrr::pluck(r, !!!i, .default = NA_character_)
+        if (is.na(val)) NA_character_ else as.character(val)
+      }))
     })
   }
 }

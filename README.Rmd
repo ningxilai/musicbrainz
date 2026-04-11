@@ -1,0 +1,178 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/musicbrainz)](http://cran.r-project.org/package=musicbrainz)
+
+# musicbrainz <img src="man/figures/logo.png" align="right" />
+
+The goal of `musicbrainz` is to make it easy to call the MusicBrainz Database API from R. Currently API does NOT require authentication for reading the data, however, requests to the database are subject to a rate limit of 1 request/sec. The package utilizes `crul` for HTTP requests with automatic rate limiting.
+
+## Installation
+
+You can install musicbrainz from CRAN or GitHub:
+
+```{r gh-installation, eval = FALSE}
+# From CRAN
+install.packages("musicbrainz")
+
+# Or from GitHub
+# install.packages("devtools")
+devtools::install_github("ningxilai/musicbrainz")
+```
+
+## Features
+
+- **Search**: Free text search across all entity types (12 types)
+- **Lookup**: Retrieve detailed information by MusicBrainz ID (mbid) (13 entity types)
+- **Browse**: Get related entities (e.g., all releases by an artist) (7 entity types)
+- **Relations**: Get entity relationships (artist, release, recording, work, label)
+- **Collection**: Browse collections by collection ID or editor
+- **Async**: Asynchronous versions using the `future` package
+- **Caching**: Built-in memoisation for repeated requests
+- **Rate limiting**: Automatic rate limiting (1 req/sec)
+- **JSON-LD**: Support for JSON-LD format (`format = "ld-json"`)
+- **HTTP Client**: Uses `crul` for HTTP requests
+
+## Example
+
+There are three main families of functions in `musicbrainz`: search, lookup, and browse.
+
+### Search
+
+Search for artists, releases, works, and more:
+
+```{r miles, eval = TRUE}
+library(musicbrainz)
+library(dplyr)
+
+# Search for artists
+miles_df <- search_artists("Miles Davis")
+miles_df
+```
+
+### Lookup
+
+Get detailed information by MusicBrainz ID:
+
+```{r lookup, eval = TRUE}
+# Lookup artist by mbid
+miles_lookup <- lookup_artist_by_id("561d854a-6a28-4aa7-8c99-323e6ce46c2a")
+miles_lookup
+
+# Lookup with includes (additional data)
+miles_with_works <- lookup_artist_by_id(
+  "561d854a-6a28-4aa7-8c99-323e6ce46c2a",
+  includes = c("works", "release-groups"))
+
+# Lookup URL by actual URL string
+lookup_url_by_resource("https://en.wikipedia.org/wiki/James_Brown")
+
+# Get genres for a release group
+lookup_release_group_genres("3bd76d40-7f0e-36b7-9348-91a33afee20e")
+
+# Get artist relationships (members, etc.)
+lookup_artist_relations("20ff3303-4fe2-4a47-a1b6-291e26aa3438", includes = "artist-rels")
+```
+
+### Browse
+
+We can also browse linked records (such as all releases by Miles Davis).
+
+```{r browse, eval = TRUE}
+# Browse releases by artist
+miles_releases <- browse_releases_by("artist", "561d854a-6a28-4aa7-8c99-323e6ce46c2a")
+miles_releases
+
+# Browse artists by area (e.g., all artists from USA)
+us_artists <- browse_artists_by("area", "489ce91b-6658-3307-9877-795b68554c98", limit = 10)
+
+# Browse collections
+browse_collection_releases("f4784850-3844-11e0-9e42-0800200c9a66")
+get_collections_by_editor("rob")
+```
+
+### Asynchronous Operations
+
+For batch operations, use async functions:
+
+```{r async, eval = TRUE}
+library(future)
+plan(multisession)  # Enable parallel processing
+
+# Batch lookup multiple artists
+mbids <- c(
+  "561d854a-6a28-4aa7-8c99-323e6ce46c2a",  # Miles Davis
+  "20ff3303-4fe2-4a47-a1b6-291e26aa3438",  # James Brown
+  "b10bbbfc-cf9e-42e0-a5e0-4d3aee7aa7d0"   # The Beatles
+)
+
+# Launch async requests (returns immediately)
+f <- lookup_artists_by_id_async(mbids)
+
+# Get results when ready
+results <- future::value(f)
+
+# Async search
+search_f <- search_artists_async("Joni Mitchell", limit = 5)
+search_results <- future::value(search_f)
+```
+
+## Other Examples
+
+```{r other, eval = TRUE}
+# Search for genres
+all_genres <- search_genres(all = TRUE)
+
+# Search with strict matching (exact matches only)
+exact_matches <- search_artists("Beatles", strict = TRUE)
+
+# Search with pagination
+page1 <- search_artists("jazz", limit = 25, offset = 0)
+page2 <- search_artists("jazz", limit = 25, offset = 25)
+
+# Browse different entity types
+# - by area: browse_*_by("area", mbid)
+# - by artist: browse_*_by("artist", mbid)
+# - by release: browse_*_by("release", mbid)
+# - by recording: browse_*_by("recording", mbid)
+# - by work: browse_*_by("work", mbid)
+# - by label: browse_*_by("label", mbid)
+
+# Cover Art URL generation
+cover_art_url("70516629-7715-41bf-97e1-b7bf11254cb8")
+# Returns: "https://coverartarchive.org/release/70516629-7715-41bf-97e1-b7bf11254cb8/front"
+
+# Using different size (e.g., 500px thumbnail)
+cover_art_url("70516629-7715-41bf-97e1-b7bf11254cb8", size = 500)
+# Returns: "https://coverartarchive.org/release/70516629-7715-41bf-97e1-b7bf11254cb8/front-500"
+```
+
+## Caching
+
+Results are cached using `memoise`. Repeated calls with the same parameters return cached results instantly:
+
+```{r cache, eval = TRUE}
+# First call - hits API
+result1 <- lookup_artist_by_id("561d854a-6a28-4aa7-8c99-323e6ce46c2a")
+
+# Second call - uses cache (instant)
+result2 <- lookup_artist_by_id("561d854a-6a28-4aa7-8c99-323e6ce46c2a")
+```
+
+To clear cache: `clear_cache()`
+
+## References
+
+1. Details of the MusicBrainz database API: <https://musicbrainz.org/doc/Development/XML_Web_Service/Version_2>
+2. Details about rate limits: <https://musicbrainz.org/doc/XML_Web_Service/Rate_Limiting>
