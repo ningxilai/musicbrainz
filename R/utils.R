@@ -1,58 +1,35 @@
-#' @importFrom httr GET add_headers
-httr_get <- function(url, format = "json") {
-  accept_type <- if (format == "ld-json") "application/ld+json" else "application/json"
-  httr::GET(
-    url,
-    httr::add_headers(
-      Accept = accept_type,
-      "user-agent" = "musicbrainz/0.0.0.9000 (https://github.com/dmi3kno/musicbrainz)"
-    )
-  )
-}
-
-# Rate limiting configuration (matching MusicBrainz API policy: 1 request per second)
-#' @importFrom ratelimitr rate limit_rate
-#' @keywords internal
-mb_rate_limit <- function(n = 1, period = 1.1) {
-  ratelimitr::limit_rate(
-    function(u) httr_get(u),
-    ratelimitr::rate(n = n, period = period)
-  )
-}
-
-httr_get_rate_ltd <- function(url, format = "json") {
-  mb_rate_limit(n = 1, period = 1.1)(url)
-}
-
-#' @importFrom httr status_code content
 get_data_with_errors <- function(url, verbose, format = "json") {
-  # error handling function
+  cli <- crul::HttpClient$new(
+    url = url,
+    headers = list(
+      Accept = if (format == "ld-json") "application/ld+json" else "application/json",
+      "user-agent" = "musicbrainz/0.1.0 (https://github.com/dmi3kno/musicbrainz)"
+    ),
+    opts = list(timeout = 10)
+  )
 
-  # api call
-  mb_data <- httr_get_rate_ltd(url, format)
+  res <- cli$get()
 
-  # status check
-  status <- httr::status_code(mb_data)
+  status <- res$status_code
+  content <- res$parse("UTF-8")
 
   if (status > 200) {
-    # this is more problematic and we shall try again
     if (verbose) {
       message(paste("http error code:", status))
     }
-    res <- NULL
+    return(NULL)
   }
+
   if (status == 200) {
     if (format == "ld-json") {
-      res <- jsonlite::fromJSON(content(mb_data, as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
+      jsonlite::fromJSON(content, simplifyVector = FALSE)
     } else {
-      res <- jsonlite::fromJSON(content(mb_data, as = "text", encoding = "UTF-8"), simplifyVector = TRUE)
+      jsonlite::fromJSON(content, simplifyVector = TRUE)
     }
   }
-  res
 }
 
-# main re-attempt function
-.GET_data <- function(url, verbose = TRUE, format = "json") { # nolint
+.GET_data <- function(url, verbose = TRUE, format = "json") {
   output <- get_data_with_errors(url, verbose, format)
   max_attempts <- 3
 
@@ -62,7 +39,7 @@ get_data_with_errors <- function(url, verbose, format = "json") {
     if (verbose) {
       message(paste0("Attempt number ", try_number))
       if (try_number == max_attempts) {
-        message("This is the last attempt, if it fails will return NULL") # nolint
+        message("This is the last attempt, if it fails will return NULL")
       }
     }
     Sys.sleep(2^try_number)
@@ -71,16 +48,11 @@ get_data_with_errors <- function(url, verbose, format = "json") {
   output
 }
 
-#' @importFrom memoise memoise
 get_data <- memoise::memoise(function(url, verbose = TRUE, format = "json") {
   .GET_data(url, verbose, format)
 })
 
-#' @importFrom httr build_url parse_url
-#' @importFrom utils URLencode
 lookup_by_id <- function(resource, mbid, includes, format = "json") {
-  # lookup:   /<ENTITY>/<MBID>?inc=<INC>
-  # API request function for lookup
   if (format == "ld-json") {
     base_url <- "https://musicbrainz.org"
   } else {
@@ -98,13 +70,9 @@ lookup_by_id <- function(resource, mbid, includes, format = "json") {
   get_data(url, format = format)
 }
 
-#' @importFrom httr build_url
 search_by_query <- function(type, query, limit, offset, format = "json") {
-  # API request function for search
-  # search:   /<ENTITY>?query=<QUERY>&limit=<LIMIT>&offset=<OFFSET>
   base_url <- "http://musicbrainz.org/ws/2"
 
-  # genre uses special /all endpoint
   if (type == "genre") {
     url <- base::paste(c(base_url, "genre", "all"), collapse = "/")
   } else {
@@ -119,13 +87,7 @@ search_by_query <- function(type, query, limit, offset, format = "json") {
   get_data(url, format = format)
 }
 
-
-#' @importFrom httr build_url
-#' @importFrom stats setNames
-#' @importFrom utils URLencode
 browse_by_lnkd_id <- function(resource, lnk_resource, mbid, includes, limit, offset, format = "json") {
-  # API request function for search
-  # browse:   /<ENTITY>?<ENTITY>=<MBID>&limit=<LIMIT>&offset=<OFFSET>&inc=<INC>
   base_url <- "http://musicbrainz.org/ws/2"
   url <- base::paste(c(base_url, resource), collapse = "/")
   url <- utils::URLencode(url)
@@ -140,6 +102,77 @@ browse_by_lnkd_id <- function(resource, lnk_resource, mbid, includes, limit, off
   url <- httr::build_url(parsed_url)
 
   get_data(url, format = format)
+}
+
+crul_batch_lookup <- function(resource, mbids, includes = NULL, format = "json") {
+  if (length(mbids) == 0) return(tibble::tibble())
+
+  base_url <- if (format == "ld-json") {
+    "https://musicbrainz.org"
+  } else {
+    "http://musicbrainz.org/ws/2"
+  }
+
+  results <- purrr::map(mbids, function(mbid) {
+    url <- base::paste(c(base_url, resource, mbid), collapse = "/")
+    if (!is.null(includes) && length(includes) && format != "ld-json") {
+      url <- paste0(url, "?inc=", paste0(includes, collapse = "+"))
+    }
+    memoise::forget(get_data)
+    get_data(url, format = format)
+  })
+
+  results <- purrr::keep(results, Negate(is.null))
+  if (length(results) == 0) return(tibble::tibble())
+
+  if (format == "ld-json") {
+    purrr::map_dfr(results, parse_list_ld)
+  } else {
+    res_lst_xtr <- get_main_parser_lst(resource)
+    purrr::map_dfr(results, function(r) {
+      tibble::as_tibble(purrr::map(res_lst_xtr, function(i) purrr::pluck(r, !!!i, .default = NA)))
+    })
+  }
+}
+
+crul_async_get <- function(urls, format = "json") {
+  if (length(urls) == 0) return(list())
+
+  cli <- crul::Async$new(urls = urls)
+  res <- cli$get()
+
+  lapply(res, function(z) {
+    if (is.null(z)) return(NULL)
+    tryCatch({
+      content <- z$parse("UTF-8")
+      if (nchar(content) < 10) return(NULL)
+      jsonlite::fromJSON(content, simplifyVector = TRUE)
+    }, error = function(e) NULL)
+  }) -> parsed
+
+  Filter(Negate(is.null), parsed)
+}
+
+crul_batch_lookup_concurrent <- function(resource, mbids, includes = NULL, format = "json") {
+  if (length(mbids) == 0) return(tibble::tibble())
+
+  base_url <- if (format == "ld-json") "https://musicbrainz.org" else "http://musicbrainz.org/ws/2"
+
+  urls <- paste0(base_url, "/", resource, "/", mbids)
+
+  results <- crul_async_get(urls, format = format)
+
+  if (length(results) == 0) return(tibble::tibble())
+
+  if (format == "ld-json") {
+    purrr::map_dfr(results, parse_list_ld)
+  } else {
+    purrr::map_dfr(results, function(r) {
+      names_to_keep <- c("id", "name", "type", "score")
+      nm <- intersect(names_to_keep, names(r))
+      tibble::as_tibble(r[nm])
+    })
+  }
 }
 
 #' Tidy eval helpers

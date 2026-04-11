@@ -116,6 +116,18 @@ get_main_parser_lst_ld <- function(type) {
 
 #' @importFrom purrr map map_dfr pluck
 #' @keywords internal
+safe_pluck <- function(x, path, default = NA) {
+  if (is.null(x) || length(x) == 0) return(default)
+  val <- tryCatch(purrr::pluck(x, !!!path), error = function(e) default)
+  if (is.null(val) || (is.list(val) && length(val) == 0)) return(default)
+  if (is.vector(val) && length(val) > 1) {
+    return(list(val))
+  }
+  val
+}
+
+#' @importFrom purrr map map_dfr pluck
+#' @keywords internal
 parse_list <- function(type, res_lst, offset, hit_count) {
   if (!is.null(res_lst) && length(res_lst)) {
     message(paste("Returning", type, offset + 1, "to", offset + length(res_lst), "of", hit_count))
@@ -123,12 +135,13 @@ parse_list <- function(type, res_lst, offset, hit_count) {
 
   res_lst_xtr <- get_main_parser_lst(type)
 
-  # Convert data.frame to list of rows if needed
   if (is.data.frame(res_lst)) {
     res_lst <- split(res_lst, seq_len(nrow(res_lst)))
   }
 
-  res_df <- purrr::map_dfr(res_lst, function(x) purrr::map(res_lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA)))
+  res_df <- purrr::map_dfr(res_lst, function(x) {
+    purrr::map(res_lst_xtr, function(i) safe_pluck(x, i))
+  })
 
   res_df$score <- as.integer(res_df$score)
 
@@ -141,6 +154,17 @@ parse_list <- function(type, res_lst, offset, hit_count) {
 parse_list_ld <- function(res) {
   if (is.null(res) || is.null(res[["@type"]])) {
     return(NULL)
+  }
+  
+  json_str <- jsonlite::toJSON(res, auto_unbox = FALSE, null = "null")
+  
+  compacted <- tryCatch(
+    jsonld::jsonld_compact(json_str, c("@context" = "https://musicbrainz.org/doc/context.jsonld")), 
+    error = function(e) NULL
+  )
+  
+  if (!is.null(compacted)) {
+    res <- jsonlite::fromJSON(compacted, simplifyVector = TRUE)
   }
 
   type_map <- c(

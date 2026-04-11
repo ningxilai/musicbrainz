@@ -46,15 +46,14 @@ mock_search_response <- function(entity = "artists") {
   )
 }
 
-# Mock http response
-mock_httr_response <- function(status_code = 200L, content = NULL) {
-  structure(
-    list(
-      status_code = status_code,
-      content = content
-    ),
-    class = "response"
+# Mock http response for crul
+mock_crul_response <- function(status_code = 200L, content = NULL) {
+  res <- crul::HttpResponse$new(
+    status_code = status_code,
+    content = charToRaw(content %||% ""),
+    headers = list()
   )
+  res
 }
 
 # Helper to suppress messages in tests

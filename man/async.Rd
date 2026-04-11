@@ -38,6 +38,12 @@
 \alias{browse_releases_by_async}
 \alias{browse_release_groups_by_async}
 \alias{browse_works_by_async}
+\alias{lookup_artist_relations_async}
+\alias{browse_collection_releases_async}
+\alias{browse_collection_artists_async}
+\alias{browse_collection_recordings_async}
+\alias{browse_collection_works_async}
+\alias{browse_collection_release_groups_async}
 \title{Async MusicBrainz API Client}
 \usage{
 lookup_artist_by_id_async(mbid, includes = NULL, format = "json")
@@ -159,6 +165,18 @@ browse_works_by_async(
   limit = NULL,
   offset = NULL
 )
+
+lookup_artist_relations_async(mbid, includes = NULL, format = "json")
+
+browse_collection_releases_async(collection, limit = NULL, offset = NULL)
+
+browse_collection_artists_async(collection, limit = NULL, offset = NULL)
+
+browse_collection_recordings_async(collection, limit = NULL, offset = NULL)
+
+browse_collection_works_async(collection, limit = NULL, offset = NULL)
+
+browse_collection_release_groups_async(collection, limit = NULL, offset = NULL)
 }
 \arguments{
 \item{mbid}{MBID of the entity}
@@ -263,6 +281,18 @@ These functions return a future that will be resolved asynchronously.
 \item \code{browse_release_groups_by_async()}: Browse release groups by related id asynchronously
 
 \item \code{browse_works_by_async()}: Browse works by related id asynchronously
+
+\item \code{lookup_artist_relations_async()}: Lookup artist relationships asynchronously
+
+\item \code{browse_collection_releases_async()}: Browse collection releases asynchronously
+
+\item \code{browse_collection_artists_async()}: Browse collection artists asynchronously
+
+\item \code{browse_collection_recordings_async()}: Browse collection recordings asynchronously
+
+\item \code{browse_collection_works_async()}: Browse collection works asynchronously
+
+\item \code{browse_collection_release_groups_async()}: Browse collection release groups asynchronously
 
 }}
 \note{

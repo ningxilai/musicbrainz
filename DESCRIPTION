@@ -1,24 +1,26 @@
 Package: musicbrainz
 Type: Package
 Title: Bindings for the 'musicbrainz' Database API
-Version: 0.0.0.9000
-Authors@R: c(person("Dmytro", "Perepolkin"
-             , email = "dperepolkin@gmail.com"
-             , role = c("aut", "cre"))
-             , person("MetaBrainz Foundation", role = c("aut"), comment="MetaBrainz"))
+Version: 0.1.0
+Date: 2026-04-11
+Authors@R: c(person("Iris", "Lennon", email = "ningxilai@outlook.com", role = c("aut", "cre")),
+             person("Dmytro", "Perepolkin", email = "dperepolkin@gmail.com", role = "aut"),
+             person("MetaBrainz Foundation", role = "aut", comment = "MetaBrainz"))
 Description: Utilising the 'MusicBrainz Database' API (see <https://musicbrainz.org/doc/Development/XML_Web_Service/Version_2>
-    for more information), retrieve information about artists, release groups, releases, recordings, works, and labels, 
-    as well as the many relationships between them.
+    for more information), retrieve information about artists, release groups, releases, recordings, works, labels, 
+    areas, events, instruments, places, series, annotations, genres and URLs. Supports synchronous and asynchronous 
+    operations, includes rate limiting, caching and various output formats.
 Depends:
-    R (>= 3.2.3)
+    R (>= 3.6.0)
 Imports: 
+    crul,
     dplyr,
     future,
     httr,
     jsonlite,
+    jsonld,
     memoise,
     purrr,
-    ratelimitr,
     rlang,
     tibble,
     tidyr,
@@ -27,6 +29,6 @@ License: MIT + file LICENSE
 Suggests: 
     testthat
 RoxygenNote: 7.3.3
-URL: https://github.com/dmi3kno/musicbrainz,
-BugReports: https://github.com/dmi3kno/musicbrainz/issues
+URL: https://github.com/ningxilai/musicbrainz,
+BugReports: https://github.com/ningxilai/musicbrainz/issues
 Encoding: UTF-8

@@ -11,16 +11,17 @@ Utilising the musicbrainz.org API, retrieve metadata about music
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/dmi3kno/musicbrainz,}
-  \item Report bugs at \url{https://github.com/dmi3kno/musicbrainz/issues}
+  \item \url{https://github.com/ningxilai/musicbrainz,}
+  \item Report bugs at \url{https://github.com/ningxilai/musicbrainz/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Dmytro Perepolkin \email{dperepolkin@gmail.com}
+\strong{Maintainer}: Iris Lennon \email{ningxilai@outlook.com}
 
 Authors:
 \itemize{
+  \item Dmytro Perepolkin \email{dperepolkin@gmail.com}
   \item MetaBrainz Foundation (MetaBrainz)
 }
 

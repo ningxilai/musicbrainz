@@ -429,3 +429,67 @@ browse_works_by_async <- function(entity, mbid, includes = NULL, limit = NULL, o
     browse_works_by(entity, mbid, includes, limit, offset)
   }, seed = TRUE)
 }
+
+#' @describeIn async Lookup URL by resource asynchronously
+#' @export
+lookup_url_by_resource_async <- function(resource, includes = NULL, format = "json") {
+  future::future({
+    lookup_url_by_resource(resource, includes, format)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Lookup release group genres asynchronously
+#' @export
+lookup_release_group_genres_async <- function(mbid, format = "json") {
+  future::future({
+    lookup_release_group_genres(mbid, format)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Lookup artist relationships asynchronously
+#' @export
+lookup_artist_relations_async <- function(mbid, includes = NULL, format = "json") {
+  future::future({
+    lookup_artist_relations(mbid, includes, format)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse collection releases asynchronously
+#' @export
+browse_collection_releases_async <- function(collection, limit = NULL, offset = NULL) {
+  future::future({
+    browse_collection_releases(collection, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse collection artists asynchronously
+#' @export
+browse_collection_artists_async <- function(collection, limit = NULL, offset = NULL) {
+  future::future({
+    browse_collection_artists(collection, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse collection recordings asynchronously
+#' @export
+browse_collection_recordings_async <- function(collection, limit = NULL, offset = NULL) {
+  future::future({
+    browse_collection_recordings(collection, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse collection works asynchronously
+#' @export
+browse_collection_works_async <- function(collection, limit = NULL, offset = NULL) {
+  future::future({
+    browse_collection_works(collection, limit, offset)
+  }, seed = TRUE)
+}
+
+#' @describeIn async Browse collection release groups asynchronously
+#' @export
+browse_collection_release_groups_async <- function(collection, limit = NULL, offset = NULL) {
+  future::future({
+    browse_collection_release_groups(collection, limit, offset)
+  }, seed = TRUE)
+}

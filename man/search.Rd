@@ -17,11 +17,29 @@
 \alias{search_genres}
 \title{Search musicbrainz database}
 \usage{
-search_annotations(query, limit = NULL, offset = NULL, strict = FALSE)
+search_annotations(
+  query,
+  limit = NULL,
+  offset = NULL,
+  strict = FALSE,
+  format = "json"
+)
 
-search_areas(query, limit = NULL, offset = NULL, strict = FALSE)
+search_areas(
+  query,
+  limit = NULL,
+  offset = NULL,
+  strict = FALSE,
+  format = "json"
+)
 
-search_artists(query, limit = NULL, offset = NULL, strict = FALSE)
+search_artists(
+  query,
+  limit = NULL,
+  offset = NULL,
+  strict = FALSE,
+  format = "json"
+)
 
 search_events(query, limit = NULL, offset = NULL, strict = FALSE)
 

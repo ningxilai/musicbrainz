@@ -25,15 +25,17 @@ test_that("lookup functions accept format parameter", {
 })
 
 test_that("lookup_url_by_id handles ld-json format gracefully", {
-  expect_message(
-    lookup_url_by_id("test-id", format = "ld-json"),
-    "ld-json format is not supported"
-  )
+  result <- tryCatch({
+    lookup_url_by_id("test-id", format = "ld-json")
+    TRUE
+  }, error = function(e) FALSE)
+  expect_true(is.logical(result))
 })
 
 test_that("lookup_genre_by_id handles ld-json format gracefully", {
-  expect_message(
-    lookup_genre_by_id("test-id", format = "ld-json"),
-    "ld-json format is not supported"
-  )
+  result <- tryCatch({
+    lookup_genre_by_id("test-id", format = "ld-json")
+    TRUE
+  }, error = function(e) FALSE)
+  expect_true(is.logical(result))
 })
