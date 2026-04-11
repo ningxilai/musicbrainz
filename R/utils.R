@@ -141,7 +141,7 @@ crul_batch_lookup <- function(resource, mbids, includes = NULL, format = "json")
     purrr::map_dfr(results, function(r) {
       tibble::as_tibble(purrr::map(res_lst_xtr, function(i) {
         val <- purrr::pluck(r, !!!i, .default = NA_character_)
-        if (is.na(val)) NA_character_ else as.character(val)
+        if (length(val) == 1 && is.na(val)) NA_character_ else as.character(paste(val, collapse = "; "))
       }))
     })
   }
