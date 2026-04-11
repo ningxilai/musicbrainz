@@ -27,6 +27,11 @@
 NULL
 
 #' @describeIn search Search annotations
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
+#' @param format Format ("json" or "ld-json")
 #' @importFrom purrr pluck
 #' @importFrom dplyr filter
 #' @export
@@ -52,6 +57,11 @@ search_annotations <- function(query, limit=NULL, offset=NULL, strict=FALSE, for
 }
 
 #' @describeIn search Search areas
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
+#' @param format Format ("json" or "ld-json")
 #' @importFrom purrr pluck
 #' @importFrom dplyr filter
 #' @export
@@ -69,6 +79,11 @@ search_areas <- function(query, limit=NULL, offset=NULL, strict=FALSE, format="j
 }
 
 #' @describeIn search Search artists
+#' @param query Search query
+#' @param limit Number of results
+#' @param offset Result offset
+#' @param strict Exact match only
+#' @param format Format ("json" or "ld-json")
 #' @importFrom purrr pluck
 #' @importFrom dplyr filter
 #' @export

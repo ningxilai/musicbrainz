@@ -48,3 +48,19 @@ test_that("lookup_release_group_genres handles non-existent MBID", {
   result <- lookup_release_group_genres("12345678-1234-1234-1234-123456789abc")
   expect_true(is.null(result) || (is.data.frame(result) && nrow(result) == 0))
 })
+
+test_that("lookup_artist_by_id with aliases returns real data", {
+  skip_if_not_installed("musicbrainz")
+  result <- lookup_artist_by_id("561d854a-6a28-4aa7-8c99-323e6ce46c2a", includes = "aliases")
+  expect_s3_class(result, "data.frame")
+  expect_true("aliases" %in% names(result))
+  expect_true(nrow(result$aliases[[1]]) > 0)
+})
+
+test_that("lookup_artist_by_id with genres returns real data", {
+  skip_if_not_installed("musicbrainz")
+  result <- lookup_artist_by_id("561d854a-6a28-4aa7-8c99-323e6ce46c2a", includes = "genres")
+  expect_s3_class(result, "data.frame")
+  expect_true("genres" %in% names(result))
+  expect_true(nrow(result$genres[[1]]) > 0)
+})

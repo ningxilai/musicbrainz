@@ -204,6 +204,10 @@ browse_collection_release_groups_async(collection, limit = NULL, offset = NULL)
 \item{mbids}{Vector of MBIDs}
 
 \item{entity}{Related entity type}
+
+\item{resource}{URL string to look up}
+
+\item{collection}{Collection name or MBID}
 }
 \description{
 To use async functions, you need to set a plan (e.g., \code{plan(multisession)}).

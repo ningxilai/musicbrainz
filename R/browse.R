@@ -49,8 +49,8 @@ mb_browse <- function(context, entity, mbid, includes, limit, offset,
 #' @importFrom dplyr filter
 #' @export
 browse_artists_by <- function(entity, mbid, includes=NULL, limit=NULL, offset=NULL) {
-  allowed_entities <- c("area", "recording", "release", "release-group", "work")
-  available_includes <- c("tags")
+  allowed_entities <- c("area", "event", "label", "place", "release", "release-group", "work")
+  available_includes <- c("tags", "genres", "aliases")
 
   mb_browse(context="artist", entity, mbid, includes, limit, offset,
                       allowed_entities, available_includes)

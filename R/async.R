@@ -431,6 +431,9 @@ browse_works_by_async <- function(entity, mbid, includes = NULL, limit = NULL, o
 }
 
 #' @describeIn async Lookup URL by resource asynchronously
+#' @param resource URL string to look up
+#' @param includes Optional includes
+#' @param format Format ("json" or "ld-json")
 #' @export
 lookup_url_by_resource_async <- function(resource, includes = NULL, format = "json") {
   future::future({
@@ -455,6 +458,9 @@ lookup_artist_relations_async <- function(mbid, includes = NULL, format = "json"
 }
 
 #' @describeIn async Browse collection releases asynchronously
+#' @param collection Collection name or MBID
+#' @param limit Number of results
+#' @param offset Result offset
 #' @export
 browse_collection_releases_async <- function(collection, limit = NULL, offset = NULL) {
   future::future({
@@ -463,6 +469,9 @@ browse_collection_releases_async <- function(collection, limit = NULL, offset = 
 }
 
 #' @describeIn async Browse collection artists asynchronously
+#' @param collection Collection name or MBID
+#' @param limit Number of results
+#' @param offset Result offset
 #' @export
 browse_collection_artists_async <- function(collection, limit = NULL, offset = NULL) {
   future::future({
@@ -471,6 +480,9 @@ browse_collection_artists_async <- function(collection, limit = NULL, offset = N
 }
 
 #' @describeIn async Browse collection recordings asynchronously
+#' @param collection Collection name or MBID
+#' @param limit Number of results
+#' @param offset Result offset
 #' @export
 browse_collection_recordings_async <- function(collection, limit = NULL, offset = NULL) {
   future::future({
@@ -479,6 +491,9 @@ browse_collection_recordings_async <- function(collection, limit = NULL, offset 
 }
 
 #' @describeIn async Browse collection works asynchronously
+#' @param collection Collection name or MBID
+#' @param limit Number of results
+#' @param offset Result offset
 #' @export
 browse_collection_works_async <- function(collection, limit = NULL, offset = NULL) {
   future::future({
@@ -487,6 +502,9 @@ browse_collection_works_async <- function(collection, limit = NULL, offset = NUL
 }
 
 #' @describeIn async Browse collection release groups asynchronously
+#' @param collection Collection name or MBID
+#' @param limit Number of results
+#' @param offset Result offset
 #' @export
 browse_collection_release_groups_async <- function(collection, limit = NULL, offset = NULL) {
   future::future({

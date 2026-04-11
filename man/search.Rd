@@ -62,13 +62,15 @@ search_works(query, limit = NULL, offset = NULL, strict = FALSE)
 search_genres(limit = NULL, offset = NULL, all = FALSE)
 }
 \arguments{
-\item{query}{search string.}
+\item{query}{Search query}
 
-\item{limit}{limit number of hits returned from database, defaults to NULL}
+\item{limit}{Number of results}
 
-\item{offset}{number of hits to skip, defaults to NULL}
+\item{offset}{Result offset}
 
-\item{strict}{return only exact matches with score of 100, defaults to FALSE}
+\item{strict}{Exact match only}
+
+\item{format}{Format ("json" or "ld-json")}
 
 \item{all}{If TRUE, fetch all genres (requires multiple API calls)}
 }

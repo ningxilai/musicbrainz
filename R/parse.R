@@ -233,8 +233,8 @@ parse_list_ld <- function(res) {
 #' @keywords internal
 get_includes_parser_df <- function(res, includes) {
   df <- tibble::tibble(
-    nm = c("releases", "recordings", "release-groups", "works", "artists", "labels", "media", "tags", "artist-rels"),
-    node=c("releases", "recordings", "release-groups", "works", "artist-credit", "label-info", "media", "tags", "relations"),
+    nm = c("releases", "recordings", "release-groups", "works", "artists", "labels", "media", "artist-credits", "tags", "genres", "artist-rels", "aliases", "annotation", "discids", "isrcs", "collections", "recording-level-rels", "work-level-rels"),
+    node=c("releases", "recordings", "release-groups", "works", "artist-credit", "label-info", "media", "artist-credit", "tags", "genres", "relations", "aliases", "annotation", "media", "isrcs", "collections", "media", "media"),
     lst_xtr = list(
       list(
         release_mbid = "id", barcode = "barcode", packaging_id = "packaging-id",
@@ -265,7 +265,27 @@ get_includes_parser_df <- function(res, includes) {
         catalog_number = "catalog-number"
       ),
       list(format = "format", disc_count = "disc-count", track_count = "track-count"),
+      list(
+        artist_mbid = list("artist", "id"), name = list("artist", "name"),
+        sort_name = list("artist", "sort_name"), join_phrase = "joinphrase"
+      ),
       list(tag_name = "name", tag_count = "count"),
+      list(genre_name = "name", genre_count = "count"),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name")
+      ),
+      list(alias_name = "name", alias_sort_name = "sort_name", alias_type = "type", begin_date = "begin_date", end_date = "end_date"),
+      list(annotation_body = "body"),
+      list(discid = "discid", sid = "sid", freedb = "freedb", offset = "offset"),
+      list(isrc = "isrc", recording_mbid = "recording_id"),
+      list(collection_mbid = "id", collection_name = "name", collection_type = "type"),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name")
+      ),
       list(
         relation_type = "type", relation_type_id = "type-id", direction = "direction",
         target_type = "target-type", begin = "begin", end = "end", ended = "ended",
@@ -307,14 +327,59 @@ get_includes_parser_df_ld <- function(res, includes) {
 #' @importFrom tibble tibble
 parse_includes <- function(nm, lst_xtr, lst) {
   if (is.null(lst) || length(lst) == 0) {
-    res_lst <- list(tibble::tibble())
-  } else if (is.data.frame(lst)) {
-    # data.frame 类型的 includes (如 relations)
+    return(tibble::tibble({{nm}} := list(tibble::tibble())))
+  }
+  
+  if (nm == "media" && is.data.frame(lst)) {
+    tracks_by_medium <- purrr::map(seq_len(nrow(lst)), function(i) {
+      m <- lst[i, , drop = FALSE]
+      tracks_list <- m$tracks[[1]]
+      if (is.null(tracks_list) || length(tracks_list) == 0) {
+        return(tibble::tibble(
+          medium_position = NA_integer_,
+          medium_format = NA_character_,
+          track_id = NA_character_,
+          track_number = NA_integer_,
+          track_title = NA_character_,
+          track_number_str = NA_character_,
+          recording_id = NA_character_,
+          recording_title = NA_character_
+        ))
+      }
+      purrr::map_dfr(tracks_list, function(t) {
+        rec <- t$recording %||% list()
+        tibble::tibble(
+          medium_position = m$position,
+          medium_format = m$format,
+          track_id = t$id %||% NA_character_,
+          track_number = t$position %||% NA_integer_,
+          track_title = t$title %||% NA_character_,
+          track_number_str = t$number %||% NA_character_,
+          recording_id = rec$id %||% NA_character_,
+          recording_title = rec$title %||% NA_character_
+        )
+      })
+    })
+    return(tibble::tibble({{nm}} := list(tracks_by_medium)))
+  }
+  
+if (nm == "artist-credits") {
+    return(tibble::tibble({{nm}} := list(tibble::tibble())))
+  }
+  
+  if (nm == "recording-level-rels" || nm == "work-level-rels") {
+    return(tibble::tibble({{nm}} := list(tibble::tibble())))
+  }
+  
+  if (is.data.frame(lst)) {
     res_lst <- list(lst)
   } else {
-    res_lst <- list(purrr::map_dfr(lst, function(x) purrr::map(lst_xtr, function(i) purrr::pluck(x, !!!i, .default = NA))))
+    res_lst <- list(purrr::map_dfr(lst, function(x) purrr::map(lst_xtr, function(i) {
+      val <- purrr::pluck(x, !!!i, .default = NA)
+      if (is.list(val)) NA else as.character(val)
+    })))
   }
-  tibble::tibble({{nm}} := res_lst)
+tibble::tibble({{nm}} := res_lst)
 }
 
 #' @importFrom purrr map_dfr pluck
