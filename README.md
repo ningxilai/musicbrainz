@@ -16,10 +16,6 @@ requests with automatic rate limiting.
 You can install musicbrainz from CRAN or GitHub:
 
 ``` r
-# From CRAN
-install.packages("musicbrainz")
-
-# Or from GitHub
 # install.packages("devtools")
 devtools::install_github("ningxilai/musicbrainz")
 ```

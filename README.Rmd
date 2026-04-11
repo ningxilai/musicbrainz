@@ -23,10 +23,6 @@ The goal of `musicbrainz` is to make it easy to call the MusicBrainz Database AP
 You can install musicbrainz from CRAN or GitHub:
 
 ```{r gh-installation, eval = FALSE}
-# From CRAN
-install.packages("musicbrainz")
-
-# Or from GitHub
 # install.packages("devtools")
 devtools::install_github("ningxilai/musicbrainz")
 ```
