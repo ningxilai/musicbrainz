@@ -511,3 +511,14 @@ browse_collection_release_groups_async <- function(collection, limit = NULL, off
     browse_collection_release_groups(collection, limit, offset)
   }, seed = TRUE)
 }
+
+#' @describeIn async Lookup disc by disc ID asynchronously
+#' @param discid Disc ID to look up
+#' @param includes Optional includes
+#' @param format Format ("json" or "ld-json")
+#' @export
+lookup_disc_id_async <- function(discid, includes = NULL, format = "json") {
+  future::future({
+    lookup_disc_id(discid, includes, format)
+  }, seed = TRUE)
+}

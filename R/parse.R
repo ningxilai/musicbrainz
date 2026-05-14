@@ -43,7 +43,8 @@ get_main_parser_lst <-function(type){
                        release_group_primary_type = list("release-group", "primary-type")),
     "release-groups", list(mbid = "id", score = "score", count = "count", title = "title", disambiguation = "disambiguation",
                            primary_type = "primary-type", primary_type_id = "primary-type-id",
-                           first_releas_date="first-release-date"),
+                           first_releas_date="first-release-date",
+                           secondary_types = "secondary-types", secondary_type_ids = "secondary-type-ids"),
     "areas",      list(mbid = "id", type = "type", score = "score", name = "name", sort_name = "sort-name",
                        disambiguation = "disambiguation", iso=list("iso-3166-2-codes", 1),
                        begin=list("list-span", "begin"), end=list("list-span", "end"), ended=list("list-span", "ended"),
@@ -62,13 +63,16 @@ get_main_parser_lst <-function(type){
                        disambiguation = "disambiguation", description = "description"),
     "series",      list(mbid = "id", type = "type", score = "score", name = "name", disambiguation = "disambiguation"),
     "works",       list(mbid = "id", type = "type", score = "score", title = "title",
-                       language = "language", disambiguation = "disambiguation"),
+                       language = "language", disambiguation = "disambiguation",
+                       iswcs = "iswcs"),
     "urls",        list(mbid = "id", type = "type", resource = "resource", relation_type = "relation-type",
                        relation_type_id = "relation-type-id"),
     "genres",      list(mbid = "id", name = "name", disambiguation = "disambiguation"),
     "relations",   list(relation_type = "type", relation_type_id = "type-id", direction = "direction",
                         target_type = "target-type", target_id = list("target", "id"),
-                        target_name = list("target", "name"), begin = "begin", end = "end", ended = "ended")
+                        target_name = list("target", "name"), begin = "begin", end = "end", ended = "ended",
+                        attributes = "attributes", attribute_ids = "attribute-ids",
+                        attribute_values = "attribute-values")
   )
   dplyr::filter(parsers_df, .data$nm == type)[["lst_xtr"]][[1]] # or pull and flatten
 }
@@ -274,7 +278,9 @@ get_includes_parser_df <- function(res, includes) {
       list(
         relation_type = "type", relation_type_id = "type-id", direction = "direction",
         target_type = "target-type", begin = "begin", end = "end", ended = "ended",
-        target_id = list("target", "id"), target_name = list("target", "name")
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
       ),
       list(alias_name = "name", alias_sort_name = "sort_name", alias_type = "type", begin_date = "begin_date", end_date = "end_date"),
       list(annotation_body = "body"),
@@ -284,12 +290,16 @@ get_includes_parser_df <- function(res, includes) {
       list(
         relation_type = "type", relation_type_id = "type-id", direction = "direction",
         target_type = "target-type", begin = "begin", end = "end", ended = "ended",
-        target_id = list("target", "id"), target_name = list("target", "name")
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
       ),
       list(
         relation_type = "type", relation_type_id = "type-id", direction = "direction",
         target_type = "target-type", begin = "begin", end = "end", ended = "ended",
-        target_id = list("target", "id"), target_name = list("target", "name")
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
       )
     )
   )

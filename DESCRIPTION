@@ -28,7 +28,7 @@ Imports:
 License: MIT + file LICENSE
 Suggests: 
     testthat
-RoxygenNote: 7.3.3
 URL: https://github.com/ningxilai/musicbrainz,
 BugReports: https://github.com/ningxilai/musicbrainz/issues
 Encoding: UTF-8
+Config/roxygen2/version: 8.0.0

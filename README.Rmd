@@ -16,11 +16,11 @@ knitr::opts_chunk$set(
 
 # musicbrainz <img src="man/figures/logo.png" align="right" />
 
-The goal of `musicbrainz` is to make it easy to call the MusicBrainz Database API from R. Currently API does NOT require authentication for reading the data, however, requests to the database are subject to a rate limit of 1 request/sec. The package utilizes `crul` for HTTP requests with automatic rate limiting.
+The goal of `musicbrainz` is to make it easy to call the MusicBrainz Database API from R. Currently API does NOT require authentication for reading the data, however, requests to the database are subject to a rate limit of 1 request/sec. The package utilizes `crul` for HTTP requests with automatic rate limiting, configurable threshold, and error tracking.
 
 ## Installation
 
-You can install musicbrainz from CRAN or GitHub:
+You can install musicbrainz from GitHub:
 
 ```{r gh-installation, eval = FALSE}
 # install.packages("devtools")
@@ -29,14 +29,17 @@ devtools::install_github("ningxilai/musicbrainz")
 
 ## Features
 
-- **Search**: Free text search across all entity types (12 types)
+- **Search**: Free text search across all entity types (13 types including genres)
 - **Lookup**: Retrieve detailed information by MusicBrainz ID (mbid) (13 entity types)
 - **Browse**: Get related entities (e.g., all releases by an artist) (7 entity types)
+- **Includes**: Request additional data: `aliases`, `genres`, `tags`, `media`, `discids`, `collections`, `artist-rels`, `artist-credits`, `isrcs`
+- **Disc ID Lookup**: Look up releases by CD disc ID (`lookup_disc_id`)
 - **Relations**: Get entity relationships (artist, release, recording, work, label)
 - **Collection**: Browse collections by collection ID or editor
-- **Async**: Asynchronous versions using the `future` package
+- **Async**: Asynchronous versions using the `future` package (single + batch)
 - **Caching**: Built-in memoisation for repeated requests
-- **Rate limiting**: Automatic rate limiting (1 req/sec)
+- **Rate limiting**: Automatic rate limiting with configurable threshold
+- **Error tracking**: `last_result()`, `last_http_code()`, `last_error_message()`
 - **JSON-LD**: Support for JSON-LD format (`format = "ld-json"`)
 - **HTTP Client**: Uses `crul` for HTTP requests
 
@@ -70,6 +73,22 @@ miles_lookup
 miles_with_works <- lookup_artist_by_id(
   "561d854a-6a28-4aa7-8c99-323e6ce46c2a",
   includes = c("works", "release-groups"))
+
+# Lookup with aliases and genres
+miles_with_aliases <- lookup_artist_by_id(
+  "561d854a-6a28-4aa7-8c99-323e6ce46c2a",
+  includes = c("aliases", "genres"))
+
+# Lookup release with media and discids
+release <- lookup_release_by_id(
+  "70516629-7715-41bf-97e1-b7bf11254cb8",
+  includes = c("media", "discids"))
+
+# Lookup work with ISWCs
+work <- lookup_work_by_id("0c80db24-389e-3620-8e0b-84dc2b7c009a")
+
+# Lookup disc by disc ID
+lookup_disc_id("0Y9uH2VcHsSEBSa1R4V.EZPuSlM-")
 
 # Lookup URL by actual URL string
 lookup_url_by_resource("https://en.wikipedia.org/wiki/James_Brown")
@@ -109,8 +128,7 @@ plan(multisession)  # Enable parallel processing
 # Batch lookup multiple artists
 mbids <- c(
   "561d854a-6a28-4aa7-8c99-323e6ce46c2a",  # Miles Davis
-  "20ff3303-4fe2-4a47-a1b6-291e26aa3438",  # James Brown
-  "b10bbbfc-cf9e-42e0-a5e0-4d3aee7aa7d0"   # The Beatles
+  "20ff3303-4fe2-4a47-a1b6-291e26aa3438"   # James Brown
 )
 
 # Launch async requests (returns immediately)
@@ -154,7 +172,7 @@ cover_art_url("70516629-7715-41bf-97e1-b7bf11254cb8", size = 500)
 # Returns: "https://coverartarchive.org/release/70516629-7715-41bf-97e1-b7bf11254cb8/front-500"
 ```
 
-## Caching
+## Caching & Rate Limiting
 
 Results are cached using `memoise`. Repeated calls with the same parameters return cached results instantly:
 
@@ -167,6 +185,32 @@ result2 <- lookup_artist_by_id("561d854a-6a28-4aa7-8c99-323e6ce46c2a")
 ```
 
 To clear cache: `clear_cache()`
+
+Rate limiting is automatic (1 second between requests by default). The threshold is configurable:
+
+```{r rate-limit, eval = TRUE}
+# Check current threshold
+rate_limit_threshold()
+
+# Change to 2 seconds
+rate_limit_threshold(2.0)
+
+# Reset to default
+rate_limit_threshold(1.0)
+```
+
+Error tracking for the last API call:
+
+```{r error-tracking, eval = TRUE}
+# Last result status
+last_result()
+
+# Last HTTP status code
+last_http_code()
+
+# Last error message (if any)
+last_error_message()
+```
 
 ## References
 

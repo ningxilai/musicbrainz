@@ -11,7 +11,7 @@ Utilising the musicbrainz.org API, retrieve metadata about music
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/ningxilai/musicbrainz,}
+  \item \url{https://github.com/ningxilai/musicbrainz},
   \item Report bugs at \url{https://github.com/ningxilai/musicbrainz/issues}
 }
 
@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Iris Lennon \email{ningxilai@outlook.com}
   \item Dmytro Perepolkin \email{dperepolkin@gmail.com}
   \item MetaBrainz Foundation (MetaBrainz)
 }

@@ -1,4 +1,46 @@
+# Global rate limiter and error state
+.state <- new.env(parent = emptyenv())
+.state$last_request_time <- NULL
+.state$last_result <- NULL
+.state$last_http_code <- NULL
+.state$last_error_message <- NULL
+
+# Rate limiter — matches JS rate-limit-threshold pattern (in seconds)
+.state$rate_limit_threshold <- 1.0
+
+wait_request <- function() {
+  if (is.null(.state$last_request_time)) return(invisible(NULL))
+  elapsed <- as.numeric(difftime(Sys.time(), .state$last_request_time, units = "secs"))
+  if (elapsed < .state$rate_limit_threshold) Sys.sleep(.state$rate_limit_threshold - elapsed)
+}
+
+stagger_request <- function() {
+  Sys.sleep(stats::runif(1, 0.5, 1.5))
+}
+
+#' Get last query result code
+#' @export
+last_result <- function() .state$last_result
+
+#' Get last HTTP status code
+#' @export
+last_http_code <- function() .state$last_http_code
+
+#' Get last error message
+#' @export
+last_error_message <- function() .state$last_error_message
+
+#' Get or set the rate limit threshold (seconds between requests)
+#' @param value New threshold in seconds. If missing, returns current value.
+#' @export
+rate_limit_threshold <- function(value) {
+  if (missing(value)) return(.state$rate_limit_threshold)
+  .state$rate_limit_threshold <- value
+}
+
 get_data_with_errors <- function(url, verbose, format = "json") {
+  wait_request()
+  
   cli <- crul::HttpClient$new(
     url = url,
     headers = list(
@@ -12,15 +54,22 @@ get_data_with_errors <- function(url, verbose, format = "json") {
 
   status <- res$status_code
   content <- res$parse("UTF-8")
+  
+  .state$last_http_code <- status
 
   if (status > 200) {
     if (verbose) {
       message(paste("http error code:", status))
     }
+    .state$last_result <- if (status == 404) "ResourceNotFound" else if (status == 503) "ServerError" else "RequestError"
+    .state$last_error_message <- content
     return(NULL)
   }
 
   if (status == 200) {
+    .state$last_result <- "Success"
+    .state$last_error_message <- NULL
+    .state$last_request_time <- Sys.time()
     if (format == "ld-json") {
       jsonlite::fromJSON(content, simplifyVector = FALSE)
     } else {

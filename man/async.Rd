@@ -46,6 +46,7 @@
 \alias{browse_collection_recordings_async}
 \alias{browse_collection_works_async}
 \alias{browse_collection_release_groups_async}
+\alias{lookup_disc_id_async}
 \title{Async MusicBrainz API Client}
 \usage{
 lookup_artist_by_id_async(mbid, includes = NULL, format = "json")
@@ -183,6 +184,8 @@ browse_collection_recordings_async(collection, limit = NULL, offset = NULL)
 browse_collection_works_async(collection, limit = NULL, offset = NULL)
 
 browse_collection_release_groups_async(collection, limit = NULL, offset = NULL)
+
+lookup_disc_id_async(discid, includes = NULL, format = "json")
 }
 \arguments{
 \item{mbid}{MBID of the entity}
@@ -208,6 +211,8 @@ browse_collection_release_groups_async(collection, limit = NULL, offset = NULL)
 \item{resource}{URL string to look up}
 
 \item{collection}{Collection name or MBID}
+
+\item{discid}{Disc ID to look up}
 }
 \description{
 To use async functions, you need to set a plan (e.g., \code{plan(multisession)}).
@@ -307,6 +312,8 @@ These functions return a future that will be resolved asynchronously.
 \item \code{browse_collection_works_async()}: Browse collection works asynchronously
 
 \item \code{browse_collection_release_groups_async()}: Browse collection release groups asynchronously
+
+\item \code{lookup_disc_id_async()}: Lookup disc by disc ID asynchronously
 
 }}
 \note{

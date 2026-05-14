@@ -262,7 +262,12 @@ lookup_release_group_by_id <- function(mbid, includes = NULL, format = "json") {
   parsers_df <- get_includes_parser_df(res, includes)
 
   # extract and bind
-  res_df <-  purrr::map_dfr(get_main_parser_lst("release-groups"), function(i) purrr::pluck(res, !!!i, .default = NA_character_))
+  res_df <- purrr::map_dfr(get_main_parser_lst("release-groups"), function(i) {
+    val <- purrr::pluck(res, !!!i, .default = NA_character_)
+    if (length(val) == 0) NA_character_
+    else if (length(val) == 1 && is.na(val)) NA_character_
+    else paste(val, collapse = "; ")
+  })
   if(nrow(parsers_df)>0)
     res_df <- dplyr::bind_cols(res_df,  purrr::pmap_dfc(parsers_df, parse_includes))
 
@@ -354,7 +359,10 @@ lookup_work_by_id <- function(mbid, includes = NULL, format = "json") {
   parsers_df <- get_includes_parser_df(res, includes)
 
   # extract and bind
-  res_df <- purrr::map_dfr(get_main_parser_lst("works"), function(i) purrr::pluck(res, !!!i, .default = NA_character_))
+  res_df <- purrr::map_dfr(get_main_parser_lst("works"), function(i) {
+    val <- purrr::pluck(res, !!!i, .default = NA_character_)
+    if (length(val) == 1 && is.na(val)) NA_character_ else paste(val, collapse = "; ")
+  })
   if(nrow(parsers_df)>0)
     res_df <- dplyr::bind_cols(res_df,  purrr::pmap_dfc(parsers_df, parse_includes))
 
