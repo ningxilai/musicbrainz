@@ -391,7 +391,7 @@ search_series <- function(query, limit=NULL, offset=NULL, strict=FALSE) {
   # prepare lists
   res_lst <- purrr::pluck(res, "series", .default = NA)
 
-  res_df <- parse_list("labels", res_lst, res[["offset"]], res[["count"]])
+  res_df <- parse_list("series", res_lst, res[["offset"]], res[["count"]])
 
   if (strict) res_df <- dplyr::filter(res_df, .data$score==100)
   res_df

@@ -34,20 +34,22 @@ get_main_parser_lst <-function(type){
                        area_id = list("area","id"), area_name = list("area","name"), area_sort_name = list("area","sort-name"),
                        area_disambiguation=list("area","disambiguation"), area_iso=list("area", "iso-3166-1-codes",1),
                        place_begin = list("life-span","begin"), place_end = list("life-span","end"), place_ended = list("life-span","ended")),
-    "recordings", list(mbid = "id", score = "score", title = "title", length = "length", video = "video"),
+    "recordings", list(mbid = "id", score = "score", title = "title", length = "length", video = "video",
+                        isrcs = "isrcs", first_release_date = "first-release-date"),
     "releases",   list(mbid = "id", score = "score", count = "count", title = "title",
-                       status = "status", status_id = "status-id", packaging_id = list("packaging", "id"), packaging_name = list("packaging", "name"),
-                       date = "date", country = "country", disambiguation="disambiguation",
-                       barcode = "barcode", asin = "asin", track_count = "track-count", quality="quality",
-                       release_group_id = list("release-group", "id"),
-                       release_group_primary_type = list("release-group", "primary-type")),
+                        status = "status", status_id = "status-id", packaging_id = list("packaging", "id"), packaging_name = list("packaging", "name"),
+                        date = "date", country = "country", disambiguation="disambiguation",
+                        barcode = "barcode", asin = "asin", track_count = "track-count", quality="quality",
+                        release_group_id = list("release-group", "id"),
+                        release_group_primary_type = list("release-group", "primary-type"),
+                        text_language = list("text-representation", "language"), text_script = list("text-representation", "script")),
     "release-groups", list(mbid = "id", score = "score", count = "count", title = "title", disambiguation = "disambiguation",
                            primary_type = "primary-type", primary_type_id = "primary-type-id",
                            first_releas_date="first-release-date",
                            secondary_types = "secondary-types", secondary_type_ids = "secondary-type-ids"),
     "areas",      list(mbid = "id", type = "type", score = "score", name = "name", sort_name = "sort-name",
                        disambiguation = "disambiguation", iso=list("iso-3166-2-codes", 1),
-                       begin=list("list-span", "begin"), end=list("list-span", "end"), ended=list("list-span", "ended"),
+                        begin=list("life-span", "begin"), end=list("life-span", "end"), ended=list("life-span", "ended"),
                        relation_type =  list("relation-list", 1, "relations", 1, "type"),
                        relation_type_id =  list("relation-list", 1, "relations", 1, "type-id"),
                        relation_direction = list("relation-list", 1, "relations", 1, "direction"),
@@ -55,16 +57,16 @@ get_main_parser_lst <-function(type){
                        relation_area_type = list("relation-list", 1, "relations", 1, "area", "type"),
                        relation_area_name = list("relation-list", 1, "relations", 1, "area", "name"),
                        relation_area_sort_name = list("relation-list", 1, "relations", 1, "area", "sort-name"),
-                       relation_area_begin = list("relation-list", 1, "relations", 1, "area", "list-span", "begin"),
-                       relation_area_end = list("relation-list", 1, "relations", 1, "area", "list-span", "end"),
-                       relation_area_ended = list("relation-list", 1, "relations", 1, "area", "list-span", "ended")),
+                        relation_area_begin = list("relation-list", 1, "relations", 1, "area", "life-span", "begin"),
+                        relation_area_end = list("relation-list", 1, "relations", 1, "area", "life-span", "end"),
+                        relation_area_ended = list("relation-list", 1, "relations", 1, "area", "life-span", "ended")),
     "annotations", list(mbid = "entity", type = "type", score = "score", name = "name", text = "text"),
-    "instruments", list(mbid = "id", type = "type", score = "score", name = "name",
-                       disambiguation = "disambiguation", description = "description"),
-    "series",      list(mbid = "id", type = "type", score = "score", name = "name", disambiguation = "disambiguation"),
-    "works",       list(mbid = "id", type = "type", score = "score", title = "title",
-                       language = "language", disambiguation = "disambiguation",
-                       iswcs = "iswcs"),
+    "instruments", list(mbid = "id", type = "type", type_id = "type-id", score = "score", name = "name",
+                        disambiguation = "disambiguation", description = "description"),
+    "series",      list(mbid = "id", type = "type", type_id = "type-id", score = "score", name = "name", disambiguation = "disambiguation"),
+    "works",       list(mbid = "id", type = "type", type_id = "type-id", score = "score", title = "title",
+                        language = "language", languages = "languages", disambiguation = "disambiguation",
+                        iswcs = "iswcs"),
     "urls",        list(mbid = "id", type = "type", resource = "resource", relation_type = "relation-type",
                        relation_type_id = "relation-type-id"),
     "genres",      list(mbid = "id", name = "name", disambiguation = "disambiguation"),
@@ -237,8 +239,12 @@ parse_list_ld <- function(res) {
 #' @keywords internal
 get_includes_parser_df <- function(res, includes) {
   df <- tibble::tibble(
-    nm = c("releases", "recordings", "release-groups", "works", "artists", "labels", "media", "artist-credits", "tags", "genres", "artist-rels", "aliases", "annotation", "discids", "isrcs", "collections", "recording-level-rels", "work-level-rels"),
-    node=c("releases", "recordings", "release-groups", "works", "artist-credit", "label-info", "media", "artist-credit", "tags", "genres", "relations", "aliases", "annotation", "media", "isrcs", "collections", "media", "media"),
+    nm = c("releases", "recordings", "release-groups", "works", "artists", "labels", "media", "artist-credits", "tags", "genres", "artist-rels", "aliases", "annotation", "discids", "isrcs", "collections", "recording-level-rels", "work-level-rels",
+      "area-rels", "event-rels", "instrument-rels", "label-rels", "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels",
+      "ratings", "release-events"),
+    node=c("releases", "recordings", "release-groups", "works", "artist-credit", "label-info", "media", "artist-credit", "tags", "genres", "relations", "aliases", "annotation", "media", "isrcs", "collections", "media", "media",
+      "relations", "relations", "relations", "relations", "relations", "relations", "relations", "relations", "relations", "relations", "relations",
+      "rating", "release-events"),
     lst_xtr = list(
       list(
         release_mbid = "id", barcode = "barcode", packaging_id = "packaging-id",
@@ -300,7 +306,86 @@ get_includes_parser_df <- function(res, includes) {
         target_id = list("target", "id"), target_name = list("target", "name"),
         attributes = "attributes", attribute_ids = "attribute-ids",
         attribute_values = "attribute-values"
-      )
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(
+        relation_type = "type", relation_type_id = "type-id", direction = "direction",
+        target_type = "target-type", begin = "begin", end = "end", ended = "ended",
+        target_id = list("target", "id"), target_name = list("target", "name"),
+        attributes = "attributes", attribute_ids = "attribute-ids",
+        attribute_values = "attribute-values"
+      ),
+      list(rating_value = "value", rating_vote_count = "vote"),
+      list(event_date = "date", event_area_id = list("area", "id"), event_area_name = list("area", "name"))
     )
   )
   df <- dplyr::filter(df, .data$nm %in% includes)
@@ -379,6 +464,25 @@ if (nm == "artist-credits") {
   
   if (nm == "recording-level-rels" || nm == "work-level-rels") {
     return(tibble::tibble({{nm}} := list(tibble::tibble())))
+  }
+
+  if (nm == "ratings") {
+    val <- purrr::map(lst_xtr, function(i) purrr::pluck(lst, !!!i, .default = NA))
+    return(tibble::tibble({{nm}} := list(tibble::as_tibble(val))))
+  }
+
+  if (nm == "release-events") {
+    if (is.data.frame(lst)) {
+      return(tibble::tibble({{nm}} := list(tibble::as_tibble(lst))))
+    }
+    res_lst <- list(purrr::map_dfr(lst, function(x) {
+      tibble::tibble(
+        event_date = x$date %||% NA_character_,
+        event_area_id = purrr::pluck(x, "area", "id", .default = NA_character_),
+        event_area_name = purrr::pluck(x, "area", "name", .default = NA_character_)
+      )
+    }))
+    return(tibble::tibble({{nm}} := res_lst))
   }
   
   if (is.data.frame(lst)) {

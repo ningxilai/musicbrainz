@@ -180,3 +180,64 @@ get_collections_by_editor <- function(editor, limit = NULL, offset = NULL) {
   url <- httr::build_url(parsed_url)
   get_data(url, format = "json")
 }
+
+entity_plural_map <- function(entity_type) {
+  switch(entity_type,
+    release = "releases",
+    artist = "artists",
+    recording = "recordings",
+    `release-group` = "release-groups",
+    work = "works",
+    area = "areas",
+    event = "events",
+    instrument = "instruments",
+    label = "labels",
+    place = "places",
+    series = "series",
+    stop("Unknown entity type: ", entity_type)
+  )
+}
+
+#' Add entries to a collection
+#'
+#' Requires an OAuth Bearer token set via \code{set_auth()}.
+#' The server expects MBIDs as a semicolon-separated list in the URL path
+#' and requires a \code{client} query parameter identifying your application.
+#'
+#' @param collection Collection MBID
+#' @param entity_type Entity type string, one of: release, artist, recording,
+#'   release-group, work, area, event, instrument, label, place, series.
+#' @param mbids Character vector of MBIDs to add.
+#' @param client Application name for the \code{client} query parameter.
+#' @export
+add_collection_entries <- function(collection, entity_type, mbids, client) {
+  plural <- entity_plural_map(entity_type)
+  mbid_str <- paste(mbids, collapse = ";")
+  url <- paste0(
+    "http://musicbrainz.org/ws/2/collection/", collection,
+    "/", plural, "/", mbid_str,
+    "?client=", utils::URLencode(client, reserved = TRUE)
+  )
+  put_data(url, "")
+}
+
+#' Delete entries from a collection
+#'
+#' Requires an OAuth Bearer token set via \code{set_auth()}.
+#'
+#' @param collection Collection MBID
+#' @param entity_type Entity type string, one of: release, artist, recording,
+#'   release-group, work, area, event, instrument, label, place, series.
+#' @param mbids Character vector of MBIDs to delete.
+#' @param client Application name for the \code{client} query parameter.
+#' @export
+delete_collection_entries <- function(collection, entity_type, mbids, client) {
+  plural <- entity_plural_map(entity_type)
+  mbid_str <- paste(mbids, collapse = ";")
+  url <- paste0(
+    "http://musicbrainz.org/ws/2/collection/", collection,
+    "/", plural, "/", mbid_str,
+    "?client=", utils::URLencode(client, reserved = TRUE)
+  )
+  delete_data(url, "")
+}

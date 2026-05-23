@@ -1,4 +1,4 @@
-# Global rate limiter and error state
+# Global rate limiter, error state, and auth
 .state <- new.env(parent = emptyenv())
 .state$last_request_time <- NULL
 .state$last_result <- NULL
@@ -8,10 +8,86 @@
 # Rate limiter — matches JS rate-limit-threshold pattern (in seconds)
 .state$rate_limit_threshold <- 1.0
 
+# OAuth Bearer token (for authenticated endpoints: collection editing, user-tags, etc.)
+.state$auth_token <- NULL
+
+#' Set OAuth Bearer token for authenticated API access
+#'
+#' MusicBrainz requires OAuth 2.0 Bearer tokens for authenticated
+#' endpoints such as collection editing (scope: \code{collection}),
+#' user tags (scope: \code{tag}), and user ratings (scope: \code{rating}).
+#'
+#' Obtain a token from \url{https://musicbrainz.org/account/applications}.
+#' Read-only operations (lookup, search, browse) do NOT require auth.
+#'
+#' @param token OAuth 2.0 Bearer token string
+#' @export
+set_auth <- function(token) {
+  .state$auth_token <- token
+  invisible(NULL)
+}
+
+#' Clear OAuth Bearer token
+#' @export
+clear_auth <- function() {
+  .state$auth_token <- NULL
+  invisible(NULL)
+}
+
 wait_request <- function() {
   if (is.null(.state$last_request_time)) return(invisible(NULL))
   elapsed <- as.numeric(difftime(Sys.time(), .state$last_request_time, units = "secs"))
   if (elapsed < .state$rate_limit_threshold) Sys.sleep(.state$rate_limit_threshold - elapsed)
+}
+
+make_auth_client <- function(url) {
+  args <- list(
+    url = url,
+    headers = list("user-agent" = "musicbrainz/0.1.0 (https://github.com/dmi3kno/musicbrainz)"),
+    opts = list(timeout = 10)
+  )
+  if (!is.null(.state$auth_token)) {
+    args$headers$Authorization <- paste("Bearer", .state$auth_token)
+  }
+  do.call(crul::HttpClient$new, args)
+}
+
+put_data <- function(url, body, verbose = TRUE) {
+  wait_request()
+  cli <- make_auth_client(url)
+  res <- cli$put(body = body, encode = "json")
+  status <- res$status_code
+  content <- res$parse("UTF-8")
+  .state$last_http_code <- status
+  if (status >= 400) {
+    if (verbose) message(paste("http error code:", status))
+    .state$last_result <- "RequestError"
+    .state$last_error_message <- content
+    return(NULL)
+  }
+  .state$last_result <- "Success"
+  .state$last_error_message <- NULL
+  .state$last_request_time <- Sys.time()
+  if (nchar(content) > 0) jsonlite::fromJSON(content, simplifyVector = TRUE) else TRUE
+}
+
+delete_data <- function(url, body, verbose = TRUE) {
+  wait_request()
+  cli <- make_auth_client(url)
+  res <- cli$delete(body = body, encode = "json")
+  status <- res$status_code
+  content <- res$parse("UTF-8")
+  .state$last_http_code <- status
+  if (status >= 400) {
+    if (verbose) message(paste("http error code:", status))
+    .state$last_result <- "RequestError"
+    .state$last_error_message <- content
+    return(NULL)
+  }
+  .state$last_result <- "Success"
+  .state$last_error_message <- NULL
+  .state$last_request_time <- Sys.time()
+  if (nchar(content) > 0) jsonlite::fromJSON(content, simplifyVector = TRUE) else TRUE
 }
 
 stagger_request <- function() {
@@ -40,8 +116,8 @@ rate_limit_threshold <- function(value) {
 
 get_data_with_errors <- function(url, verbose, format = "json") {
   wait_request()
-  
-  cli <- crul::HttpClient$new(
+
+  args <- list(
     url = url,
     headers = list(
       Accept = if (format == "ld-json") "application/ld+json" else "application/json",
@@ -49,6 +125,12 @@ get_data_with_errors <- function(url, verbose, format = "json") {
     ),
     opts = list(timeout = 10)
   )
+
+  if (!is.null(.state$auth_token)) {
+    args$headers$Authorization <- paste("Bearer", .state$auth_token)
+  }
+
+  cli <- do.call(crul::HttpClient$new, args)
 
   res <- cli$get()
 

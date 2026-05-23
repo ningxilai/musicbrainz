@@ -29,7 +29,9 @@ NULL
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_area_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("tags", "genres", "aliases")
+  available_includes <- c("tags", "genres", "aliases", "annotations", "ratings",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes(includes, available_includes)
   res <- lookup_by_id("area", mbid, includes, format = format)
 
@@ -59,7 +61,10 @@ lookup_area_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_artist_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("recordings", "releases", "release-groups", "works", "tags", "genres", "artist-rels", "aliases")
+  available_includes <- c("recordings", "releases", "release-groups", "works", "tags", "genres", "artist-rels", "aliases",
+    "annotations", "ratings",
+    "area-rels", "event-rels", "instrument-rels", "label-rels", "place-rels",
+    "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("artist", mbid, includes, format = format)
 
@@ -92,7 +97,9 @@ lookup_artist_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_event_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("tags", "genres")
+  available_includes <- c("tags", "genres", "aliases", "annotations", "ratings",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("event", mbid, includes, format = format)
 
@@ -123,7 +130,9 @@ lookup_event_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_instrument_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("tags", "genres")
+  available_includes <- c("tags", "genres", "aliases", "annotations",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("instrument", mbid, includes, format = format)
 
@@ -154,7 +163,9 @@ lookup_instrument_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_label_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("releases", "tags", "genres", "aliases")
+  available_includes <- c("releases", "tags", "genres", "aliases", "annotations", "ratings",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("label", mbid, includes, format = format)
 
@@ -184,7 +195,9 @@ lookup_label_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_place_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("tags", "genres")
+  available_includes <- c("tags", "genres", "aliases", "annotations", "ratings",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("place", mbid, includes, format = format)
 
@@ -215,7 +228,10 @@ lookup_place_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_recording_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("artists", "releases", "tags", "genres", "artist-credits", "isrcs")
+  available_includes <- c("artists", "releases", "tags", "genres", "artist-credits", "isrcs",
+    "aliases", "annotations", "ratings",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("recording", mbid, includes, format = format)
 
@@ -245,7 +261,10 @@ lookup_recording_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_release_group_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("artists", "releases", "tags", "genres", "artist-credits")
+  available_includes <- c("artists", "releases", "tags", "genres", "artist-credits",
+    "aliases", "annotations", "ratings",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("release-group", mbid, includes, format = format)
 
@@ -281,7 +300,10 @@ lookup_release_group_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_release_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("artists", "labels", "media", "release-groups", "tags", "genres", "artist-credits", "discids", "collections", "recording-level-rels", "work-level-rels")
+  available_includes <- c("artists", "labels", "media", "release-groups", "tags", "genres", "artist-credits", "discids", "collections", "recording-level-rels", "work-level-rels",
+    "aliases", "annotations", "ratings", "isrcs", "release-events",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("release", mbid, includes, format = format)
 
@@ -311,7 +333,9 @@ lookup_release_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_series_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("tags", "genres")
+  available_includes <- c("tags", "genres", "aliases", "annotations",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("series", mbid, includes, format = format)
 
@@ -342,7 +366,9 @@ lookup_series_by_id <- function(mbid, includes = NULL, format = "json") {
 #' @importFrom purrr map_dfr pluck pmap_dfc
 #' @export
 lookup_work_by_id <- function(mbid, includes = NULL, format = "json") {
-  available_includes <- c("tags", "genres", "aliases")
+  available_includes <- c("tags", "genres", "aliases", "annotations", "ratings",
+    "area-rels", "artist-rels", "event-rels", "instrument-rels", "label-rels",
+    "place-rels", "recording-rels", "release-rels", "release-group-rels", "series-rels", "url-rels", "work-rels")
   includes <- validate_includes (includes, available_includes)
   res <- lookup_by_id("work", mbid, includes, format = format)
 
